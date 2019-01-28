@@ -1,17 +1,15 @@
 #include <SPI.h>
 #include "epd2in9.h"
 #include "epdpaint.h"
-#include "imagedata.h"
 #include <Time.h>
 #include <Timezone.h>
 #include "NTP.h"
+#define WIFI_SSID "Mobvoi-Guest"       // 使用时请修改为当前你的 wifi ssid
+#define WIFI_PASS "mobvoiguest"   // 使用时请修改为当前你的 wifi 密码
 
+//#define WIFI_SSID "HiWiFi_301"       // 使用时请修改为当前你的 wifi ssid
+//#define WIFI_PASS "13520391363"   // 使用时请修改为当前你的 wifi 密码
 
-#define WIFI_SSID "HiWiFi_301"       // 使用时请修改为当前你的 wifi ssid
-#define WIFI_PASS ""   // 使用时请修改为当前你的 wifi 密码
-
-//#define WIFI_SSID "luck max"       // 使用时请修改为当前你的 wifi ssid
-//#define WIFI_PASS "402050821"   // 使用时请修改为当前你的 wifi 密码
 // 北京时间时区
 #define STD_TIMEZONE_OFFSET +8    // Standard Time offset (-7 is mountain time)
 // Define daylight savings time rules for the China
