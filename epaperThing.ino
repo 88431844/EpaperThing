@@ -23,13 +23,13 @@ WiFiClient client;
 // Previous seconds value
 time_t previousSecond = 0;
 /**
-  * Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
-  * In this case, a smaller image buffer is allocated and you have to 
-  * update a partial display several times.
-  * 1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
-  */
+    Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
+    In this case, a smaller image buffer is allocated and you have to
+    update a partial display several times.
+    1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
+*/
 unsigned char image[1024];
-Paint paint(image, 0, 0);    // width should be the multiple of 8 
+Paint paint(image, 0, 0);    // width should be the multiple of 8
 Epd epd;
 unsigned long time_start_ms;
 unsigned long time_now_s;
@@ -38,31 +38,31 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   if (epd.Init(lut_full_update) != 0) {
-      Serial.print("e-Paper init failed");
-      return;
+    Serial.print("e-Paper init failed");
+    return;
   }
-initNTP(WIFI_SSID, WIFI_PASS);
-  /** 
-   *  there are 2 memory areas embedded in the e-paper display
-   *  and once the display is refreshed, the memory area will be auto-toggled,
-   *  i.e. the next action of SetFrameMemory will set the other memory area
-   *  therefore you have to clear the frame memory twice.
-   */
+  initNTP(WIFI_SSID, WIFI_PASS);
+  /**
+      there are 2 memory areas embedded in the e-paper display
+      and once the display is refreshed, the memory area will be auto-toggled,
+      i.e. the next action of SetFrameMemory will set the other memory area
+      therefore you have to clear the frame memory twice.
+  */
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
 
   if (epd.Init(lut_partial_update) != 0) {
-      Serial.print("e-Paper init failed");
-      return;
+    Serial.print("e-Paper init failed");
+    return;
   }
   time_start_ms = millis();
 }
 
 void loop() {
 
- //  Update the display only if time has changed
+  //  Update the display only if time has changed
   if (timeStatus() != timeNotSet) {
     if (second() != previousSecond) {
       previousSecond = second();
@@ -84,7 +84,7 @@ void updateDisplay(void) {
   time_t localTime = myTZ.toLocal(utc, &tcr);
 
   // Map time to pixel positions
-  int weekdays=   weekday(localTime);
+  int weekdays =   weekday(localTime);
   int days    =   day(localTime);
   int months  =   month(localTime);
   int years   =   year(localTime);
@@ -111,35 +111,35 @@ void updateDisplay(void) {
   String h = "";
   String m = "";
   String s = "";
-  if(hours < 10 ){
-    h = "0"+String(hours);
-  }else{
+  if (hours < 10 ) {
+    h = "0" + String(hours);
+  } else {
     h = String(hours);
   }
-    if(minutes < 10 ){
-    m = "0"+String(minutes);
+  if (minutes < 10 ) {
+    m = "0" + String(minutes);
   }
-  else{
+  else {
     m = String(minutes);
   }
-    if(seconds < 10 ){
-    s = "0"+String(seconds);
-  }else{
+  if (seconds < 10 ) {
+    s = "0" + String(seconds);
+  } else {
     s = String(seconds);
   }
   /////process date///////
   String mm = "";
   String dd = "";
   String w = dayStr(weekdays);
-  
-   if(months < 10 ){
-    mm = "0"+String(months);
-  }else{
+
+  if (months < 10 ) {
+    mm = "0" + String(months);
+  } else {
     mm = String(months);
   }
-  if(days < 10 ){
-    dd = "0"+String(days);
-  }else{
+  if (days < 10 ) {
+    dd = "0" + String(days);
+  } else {
     dd = String(days);
   }
   String mytime = h + ":" + m ;
@@ -152,22 +152,22 @@ void updateDisplay(void) {
   paint.SetRotate(ROTATE_90);
 
   paint.Clear(UNCOLORED);
-char __mytime[sizeof(mytime)];
-    mytime.toCharArray(__mytime, sizeof(__mytime));
-  paint.DrawStringAt(0, 4,__mytime , &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 100, (296-90)/2, paint.GetWidth(), paint.GetHeight());
+  char __mytime[sizeof(mytime)];
+  mytime.toCharArray(__mytime, sizeof(__mytime));
+  paint.DrawStringAt(0, 4, __mytime , &Font24, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 100, (296 - 90) / 2, paint.GetWidth(), paint.GetHeight());
 
- paint.Clear(UNCOLORED);
-char __mydate[sizeof(mydate)];
-    mydate.toCharArray(__mydate, sizeof(__mydate));
+  paint.Clear(UNCOLORED);
+  char __mydate[sizeof(mydate)];
+  mydate.toCharArray(__mydate, sizeof(__mydate));
   paint.DrawStringAt(0, 4, __mydate, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 60, (296-160)/2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 60, (296 - 160) / 2, paint.GetWidth(), paint.GetHeight());
 
-   paint.Clear(UNCOLORED);
-char __myweek[sizeof(w)];
-    w.toCharArray(__myweek, sizeof(__myweek));
+  paint.Clear(UNCOLORED);
+  char __myweek[sizeof(w)];
+  w.toCharArray(__myweek, sizeof(__myweek));
   paint.DrawStringAt(0, 4, __myweek, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 20, (296-145)/2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 20, (296 - 145) / 2, paint.GetWidth(), paint.GetHeight());
 
   epd.DisplayFrame();
 }
