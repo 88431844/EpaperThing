@@ -53,59 +53,10 @@ initNTP(WIFI_SSID, WIFI_PASS);
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
 
-//  paint.SetRotate(ROTATE_0);
-//  paint.SetWidth(128);
-//  paint.SetHeight(24);
-//
-//  /* For simplicity, the arguments are explicit numerical coordinates */
-//  paint.Clear(COLORED);
-//  paint.DrawStringAt(0, 4, "Hello world!", &Font16, UNCOLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 0, 10, paint.GetWidth(), paint.GetHeight());
-//  
-//  paint.Clear(UNCOLORED);
-//  paint.DrawStringAt(0, 4, "e-Paper Demo", &Font16, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 0, 30, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.SetWidth(64);
-//  paint.SetHeight(64);
-//  
-//  paint.Clear(UNCOLORED);
-//  paint.DrawRectangle(0, 0, 40, 50, COLORED);
-//  paint.DrawLine(0, 0, 40, 50, COLORED);
-//  paint.DrawLine(40, 0, 0, 50, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 16, 60, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.Clear(UNCOLORED);
-//  paint.DrawCircle(32, 32, 30, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 72, 60, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.Clear(UNCOLORED);
-//  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 16, 130, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.Clear(UNCOLORED);
-//  paint.DrawFilledCircle(32, 32, 30, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 72, 130, paint.GetWidth(), paint.GetHeight());
-//  epd.DisplayFrame();
-//
-//  delay(2000);
-
   if (epd.Init(lut_partial_update) != 0) {
       Serial.print("e-Paper init failed");
       return;
   }
-
-  /** 
-   *  there are 2 memory areas embedded in the e-paper display
-   *  and once the display is refreshed, the memory area will be auto-toggled,
-   *  i.e. the next action of SetFrameMemory will set the other memory area
-   *  therefore you have to set the frame memory and refresh the display twice.
-   */
-//  epd.SetFrameMemory(IMAGE_DATA);
-//  epd.DisplayFrame();
-//  epd.SetFrameMemory(IMAGE_DATA);
-//  epd.DisplayFrame();
-
   time_start_ms = millis();
 }
 
@@ -120,9 +71,6 @@ void loop() {
     }
   }
   delay(500);
-
-  
-  
 }
 
 void updateDisplay(void) {
@@ -158,10 +106,11 @@ void updateDisplay(void) {
   Serial.print(seconds);
   Serial.print(" - ");
   Serial.print(dayStr(weekdays));
+
+  /////process time///////
   String h = "";
   String m = "";
   String s = "";
-  String w = dayStr(weekdays);
   if(hours < 10 ){
     h = "0"+String(hours);
   }else{
@@ -178,36 +127,47 @@ void updateDisplay(void) {
   }else{
     s = String(seconds);
   }
-  String mytime = h + " : " + m ;
-  String mydate = String(years) + "/" + months + "/" + days + "" + w;
-  Serial.println("!!!: " + mytime);
-  Serial.println("!!!: " + mydate);
+  /////process date///////
+  String mm = "";
+  String dd = "";
+  String w = dayStr(weekdays);
+  
+   if(months < 10 ){
+    mm = "0"+String(months);
+  }else{
+    mm = String(months);
+  }
+  if(days < 10 ){
+    dd = "0"+String(days);
+  }else{
+    dd = String(days);
+  }
+  String mytime = h + ":" + m ;
+  String mydate = String(years) + "-" + mm + "-" + dd;
+  Serial.println("mytime: " + mytime);
+  Serial.println("mydate: " + mydate);
 
-//
   paint.SetWidth(32);
-  paint.SetHeight(188);
+  paint.SetHeight(244);
   paint.SetRotate(ROTATE_90);
-//
 
   paint.Clear(UNCOLORED);
 char __mytime[sizeof(mytime)];
     mytime.toCharArray(__mytime, sizeof(__mytime));
   paint.DrawStringAt(0, 4,__mytime , &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 80, 72, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 100, (296-90)/2, paint.GetWidth(), paint.GetHeight());
 
  paint.Clear(UNCOLORED);
 char __mydate[sizeof(mydate)];
     mydate.toCharArray(__mydate, sizeof(__mydate));
   paint.DrawStringAt(0, 4, __mydate, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 0, 50, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 60, (296-160)/2, paint.GetWidth(), paint.GetHeight());
 
+   paint.Clear(UNCOLORED);
+char __myweek[sizeof(w)];
+    w.toCharArray(__myweek, sizeof(__myweek));
+  paint.DrawStringAt(0, 4, __myweek, &Font24, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 20, (296-145)/2, paint.GetWidth(), paint.GetHeight());
 
-  
-
-//  paint.DrawStringAt(0, 4, "e-Paper Demo", &Font16, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 0, 30, paint.GetWidth(), paint.GetHeight());
-  
   epd.DisplayFrame();
-//
-  delay(500);
 }
