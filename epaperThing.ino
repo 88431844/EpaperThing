@@ -4,11 +4,9 @@
 #include <Time.h>
 #include <Timezone.h>
 #include "NTP.h"
-#define WIFI_SSID "Mobvoi-Guest"       // 使用时请修改为当前你的 wifi ssid
-#define WIFI_PASS "mobvoiguest"   // 使用时请修改为当前你的 wifi 密码
-
-//#define WIFI_SSID "HiWiFi_301"       // 使用时请修改为当前你的 wifi ssid
-//#define WIFI_PASS "13520391363"   // 使用时请修改为当前你的 wifi 密码
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 
 // 北京时间时区
 #define STD_TIMEZONE_OFFSET +8    // Standard Time offset (-7 is mountain time)
@@ -41,7 +39,12 @@ void setup() {
     Serial.print("e-Paper init failed");
     return;
   }
-  initNTP(WIFI_SSID, WIFI_PASS);
+
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("AutoConnectAP");
+  Serial.println("connected...yeey :)");
+  
+  initNTP();
   /**
       there are 2 memory areas embedded in the e-paper display
       and once the display is refreshed, the memory area will be auto-toggled,

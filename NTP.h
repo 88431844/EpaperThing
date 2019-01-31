@@ -105,24 +105,7 @@ time_t getNTPTime() {
 }
 
 // Login to WiFi network and assign the time sync provider
-void initNTP(const char *ssid, const char *password) {
-
-  // Set station mode
-  WiFi.mode(WIFI_STA);   //set work mode:  WIFI_AP /WIFI_STA /WIFI_AP_STA
-
-  // Start by connecting to a WiFi network
-  WiFi.begin(ssid, password);
-
-  int i = 0;
-  while ((WiFi.status() != WL_CONNECTED) && (i++ < 30)) {
-    delay(500);
-    Serial.printf(".");
-  }
-  if (i == 31) {
-    Serial.printf("\nCould not connect to: %s\n", ssid);
-    return;
-  }
-  Serial.printf("\nConnected to: %s\n", ssid);
+void initNTP() {
   delay(500);
 
   // Login suceeded so set UDP local port
