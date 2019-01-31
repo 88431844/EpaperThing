@@ -155,26 +155,26 @@ void updateDisplay(void) {
   Serial.println("mydate: " + mydate);
 
   paint.SetWidth(32);
-  paint.SetHeight(264);
+  paint.SetHeight(240);
   paint.SetRotate(ROTATE_90);
 
   paint.Clear(UNCOLORED);
   char __mytime[charSize];
   mytime.toCharArray(__mytime, charSize);
   paint.DrawStringAt(0, 4, __mytime , &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 100, (296 - 90) / 2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 100, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
   char __mydate[charSize];
   mydate.toCharArray(__mydate, charSize);
   paint.DrawStringAt(0, 4, __mydate, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 70, (296 - 160) / 2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 70, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
   char __myweek[charSize];
   w.toCharArray(__myweek, charSize);
   paint.DrawStringAt(0, 4, __myweek, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 35, (296 - 125) / 2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 35, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
   String minTemp = "-11";
@@ -183,7 +183,15 @@ void updateDisplay(void) {
    char __temp[50];
   temp.toCharArray(__temp, 50);
   paint.DrawStringAt(0, 4, __temp, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 0, (296 - 125) / 2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
+
+  paint.SetWidth(64);
+  paint.SetHeight(64);
+  paint.Clear(UNCOLORED);
+  paint.DrawRectangle(0, 0, 40, 50, COLORED);
+  paint.DrawLine(0, 0, 40, 50, COLORED);
+  paint.DrawLine(40, 0, 0, 50, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 10, 250, paint.GetWidth(), paint.GetHeight());
 
   epd.DisplayFrame();
 }
