@@ -41,7 +41,7 @@ void setup() {
   }
 
   WiFiManager wifiManager;
-  wifiManager.autoConnect("AutoConnectAP");
+  wifiManager.autoConnect("ePaperThing");
   Serial.println("connected...yeey :)");
   
   initNTP();
