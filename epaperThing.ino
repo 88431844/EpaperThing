@@ -7,6 +7,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
+#include "heweather.h"
 
 // 北京时间时区
 #define STD_TIMEZONE_OFFSET +8    // Standard Time offset (-7 is mountain time)
@@ -15,6 +16,7 @@ TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
 Timezone myTZ(mySTD, mySTD);
 
 WiFiClient client;
+heweatherclient heweather();
 
 #define COLORED     0
 #define UNCOLORED   1
@@ -32,6 +34,8 @@ Epd epd;
 unsigned long time_start_ms;
 unsigned long time_now_s;
 
+int charSize = 50;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -43,7 +47,7 @@ void setup() {
   WiFiManager wifiManager;
   wifiManager.autoConnect("ePaperThing");
   Serial.println("connected...yeey :)");
-  
+
   initNTP();
   /**
       there are 2 memory areas embedded in the e-paper display
@@ -151,26 +155,35 @@ void updateDisplay(void) {
   Serial.println("mydate: " + mydate);
 
   paint.SetWidth(32);
-  paint.SetHeight(244);
+  paint.SetHeight(264);
   paint.SetRotate(ROTATE_90);
 
   paint.Clear(UNCOLORED);
-  char __mytime[sizeof(mytime)];
-  mytime.toCharArray(__mytime, sizeof(__mytime));
+  char __mytime[charSize];
+  mytime.toCharArray(__mytime, charSize);
   paint.DrawStringAt(0, 4, __mytime , &Font24, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 100, (296 - 90) / 2, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  char __mydate[sizeof(mydate)];
-  mydate.toCharArray(__mydate, sizeof(__mydate));
+  char __mydate[charSize];
+  mydate.toCharArray(__mydate, charSize);
   paint.DrawStringAt(0, 4, __mydate, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 60, (296 - 160) / 2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 70, (296 - 160) / 2, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  char __myweek[sizeof(w)];
-  w.toCharArray(__myweek, sizeof(__myweek));
+  char __myweek[charSize];
+  w.toCharArray(__myweek, charSize);
   paint.DrawStringAt(0, 4, __myweek, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 20, (296 - 145) / 2, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(paint.GetImage(), 35, (296 - 125) / 2, paint.GetWidth(), paint.GetHeight());
+
+  paint.Clear(UNCOLORED);
+  String minTemp = "-11";
+  String maxTemp = "-18";
+  String temp =  "temp:" + minTemp + "/" + maxTemp;
+   char __temp[50];
+  temp.toCharArray(__temp, 50);
+  paint.DrawStringAt(0, 4, __temp, &Font24, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 0, (296 - 125) / 2, paint.GetWidth(), paint.GetHeight());
 
   epd.DisplayFrame();
 }
