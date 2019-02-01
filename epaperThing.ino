@@ -1,13 +1,14 @@
 #include <SPI.h>
-#include "epd2in9.h"
-#include "epdpaint.h"
 #include <Time.h>
 #include <Timezone.h>
-#include "NTP.h"
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
+
 #include "heweather.h"
+#include "NTP.h"
+#include "epd2in9.h"
+#include "epdpaint.h"
 
 // 北京时间时区
 #define STD_TIMEZONE_OFFSET +8    // Standard Time offset (-7 is mountain time)
@@ -44,11 +45,6 @@ void setup() {
     return;
   }
 
-  WiFiManager wifiManager;
-  wifiManager.autoConnect("ePaperThing");
-  Serial.println("connected...yeey :)");
-
-  initNTP();
   /**
       there are 2 memory areas embedded in the e-paper display
       and once the display is refreshed, the memory area will be auto-toggled,
@@ -59,6 +55,22 @@ void setup() {
   epd.DisplayFrame();
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
+
+  paint.SetRotate(ROTATE_90);
+  paint.SetWidth(64);
+  paint.SetHeight(128);
+  paint.Clear(UNCOLORED);
+  paint.DrawStringAt(0, 4, "wifi...", &Font24, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 35, 0, paint.GetWidth(), paint.GetHeight());
+  epd.DisplayFrame();
+  
+
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("ePaperThing");
+  Serial.println("connected...yeey :)");
+
+  initNTP();
+
 
   if (epd.Init(lut_partial_update) != 0) {
     Serial.print("e-Paper init failed");
