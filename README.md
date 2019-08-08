@@ -16,5 +16,5 @@
 - 工具-》开发版管理器-》搜esp8266 下载
 
 ### 需要引入arduino库
-- name : 'Time' ,"authors":"Michael Margolis"
-
+- name : 'Time' ,"authors" : "Michael Margolis" ,link : "https://github.com/PaulStoffregen/Time"
+- name : "Timezone" ,"authors" : "Jack Christensen" ,link : "https://github.com/JChristensen/Timezone"
