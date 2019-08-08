@@ -6,7 +6,7 @@
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 
 #include "heweather.h"
-#include "NTP.h"
+
 #include "epd2in9.h"
 #include "epdpaint.h"
 
@@ -167,7 +167,7 @@ void updateDisplay(void) {
   Serial.println("mydate: " + mydate);
 
   paint.SetWidth(32);
-  paint.SetHeight(240);
+  paint.SetHeight(250);
   paint.SetRotate(ROTATE_90);
 
   paint.Clear(UNCOLORED);
@@ -177,33 +177,48 @@ void updateDisplay(void) {
   epd.SetFrameMemory(paint.GetImage(), 100, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
+  char __myweek[charSize];
+  w.toCharArray(__myweek, charSize);
+  paint.DrawStringAt(0, 4, __myweek, &Font24, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 100, 110, paint.GetWidth(), paint.GetHeight());
+
+  paint.Clear(UNCOLORED);
   char __mydate[charSize];
   mydate.toCharArray(__mydate, charSize);
   paint.DrawStringAt(0, 4, __mydate, &Font24, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 70, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  char __myweek[charSize];
-  w.toCharArray(__myweek, charSize);
-  paint.DrawStringAt(0, 4, __myweek, &Font24, COLORED);
+  String first =  "bad artists copy";
+  char __first[100];
+  first.toCharArray(__first, 100);
+  paint.DrawStringAt(0, 4, __first, &Font20, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 35, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  String minTemp = "-11";
-  String maxTemp = "-18";
-  String temp =  "temp:" + minTemp + "/" + maxTemp;
-   char __temp[50];
-  temp.toCharArray(__temp, 50);
-  paint.DrawStringAt(0, 4, __temp, &Font24, COLORED);
+  String second =  "good artists steal";
+  char __second[100];
+  second.toCharArray(__second, 100);
+  paint.DrawStringAt(0, 4, __second, &Font20, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
 
-  paint.SetWidth(64);
-  paint.SetHeight(64);
-  paint.Clear(UNCOLORED);
-  paint.DrawRectangle(0, 0, 40, 50, COLORED);
-  paint.DrawLine(0, 0, 40, 50, COLORED);
-  paint.DrawLine(40, 0, 0, 50, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 10, 250, paint.GetWidth(), paint.GetHeight());
+
+//  paint.Clear(UNCOLORED);
+//  String minTemp = "-11";
+//  String maxTemp = "-18";
+//  String temp =  "temp:" + minTemp + "/" + maxTemp;
+//   char __temp[50];
+//  temp.toCharArray(__temp, 50);
+//  paint.DrawStringAt(0, 4, __temp, &Font24, COLORED);
+//  epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
+
+  //paint.SetWidth(64);
+  //paint.SetHeight(64);
+  //paint.Clear(UNCOLORED);
+  //paint.DrawRectangle(0, 0, 40, 50, COLORED);
+  //paint.DrawLine(0, 0, 40, 50, COLORED);
+  //paint.DrawLine(40, 0, 0, 50, COLORED);
+  //epd.SetFrameMemory(paint.GetImage(), 10, 250, paint.GetWidth(), paint.GetHeight());
 
   epd.DisplayFrame();
 }
