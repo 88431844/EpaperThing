@@ -19,3 +19,4 @@
 - name : 'Time' ,"authors" : "Michael Margolis" ,link : "https://github.com/PaulStoffregen/Time"
 - name : "Timezone" ,"authors" : "Jack Christensen" ,link : "https://github.com/JChristensen/Timezone"
 - name : "WifiManager" ,"" : "" ,link : "https://github.com/tzapu/WiFiManager"
+- name : "JsonStreamingParser" ,"authors" : "Daniel Eichhorn" ,link : "https://github.com/squix78/json-streaming-parser"
