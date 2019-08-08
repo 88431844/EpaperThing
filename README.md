@@ -10,3 +10,13 @@
 - 日历
 - 温湿度
 - 天气
+
+### arduino环境配置
+- arduino IDE中文件-》首选项-》附加开发版管理器网址 添加：http://arduino.esp8266.com/stable/package_esp8266com_index.json
+- 工具-》开发版管理器-》搜esp8266 下载
+
+### 需要引入arduino库
+- name : 'Time' ,"authors" : "Michael Margolis" ,link : "https://github.com/PaulStoffregen/Time"
+- name : "Timezone" ,"authors" : "Jack Christensen" ,link : "https://github.com/JChristensen/Timezone"
+- name : "WifiManager" ,"" : "" ,link : "https://github.com/tzapu/WiFiManager"
+- name : "JsonStreamingParser" ,"authors" : "Daniel Eichhorn" ,link : "https://github.com/squix78/json-streaming-parser"
