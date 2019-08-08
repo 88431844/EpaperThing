@@ -18,3 +18,4 @@
 ### 需要引入arduino库
 - name : 'Time' ,"authors" : "Michael Margolis" ,link : "https://github.com/PaulStoffregen/Time"
 - name : "Timezone" ,"authors" : "Jack Christensen" ,link : "https://github.com/JChristensen/Timezone"
+- name : "WifiManager" ,"" : "" ,link : "https://github.com/tzapu/WiFiManager"
