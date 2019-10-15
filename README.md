@@ -21,4 +21,4 @@
 - name : "WifiManager" ,"" : "" ,link : "https://github.com/tzapu/WiFiManager"
 - name : "JsonStreamingParser" ,"authors" : "Daniel Eichhorn" ,link : "https://github.com/squix78/json-streaming-parser"
 
-![avatar](https://github.com/88431844/ePaperThing/blob/master/IMG_4380 (1).JPG)
+![avatar](https://github.com/88431844/ePaperThing/blob/master/IMG_4381.JPG)
