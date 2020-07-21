@@ -56,12 +56,13 @@ void setup() {
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
 
+
+  paint.SetWidth(32);
+  paint.SetHeight(250);
   paint.SetRotate(ROTATE_90);
-  paint.SetWidth(64);
-  paint.SetHeight(128);
   paint.Clear(UNCOLORED);
-  paint.DrawStringAt(0, 4, "wifi...", &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 35, 0, paint.GetWidth(), paint.GetHeight());
+  paint.DrawStringAt(0, 4, "wifi connecting...", &Font20, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
   epd.DisplayFrame();
   
 
