@@ -203,23 +203,5 @@ void updateDisplay(void) {
   paint.DrawStringAt(0, 4, __second, &Font20, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
 
-
-//  paint.Clear(UNCOLORED);
-//  String minTemp = "-11";
-//  String maxTemp = "-18";
-//  String temp =  "temp:" + minTemp + "/" + maxTemp;
-//   char __temp[50];
-//  temp.toCharArray(__temp, 50);
-//  paint.DrawStringAt(0, 4, __temp, &Font24, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
-
-  //paint.SetWidth(64);
-  //paint.SetHeight(64);
-  //paint.Clear(UNCOLORED);
-  //paint.DrawRectangle(0, 0, 40, 50, COLORED);
-  //paint.DrawLine(0, 0, 40, 50, COLORED);
-  //paint.DrawLine(40, 0, 0, 50, COLORED);
-  //epd.SetFrameMemory(paint.GetImage(), 10, 250, paint.GetWidth(), paint.GetHeight());
-
   epd.DisplayFrame();
 }
