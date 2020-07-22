@@ -3,7 +3,7 @@
 #include <Timezone.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
-#include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
+#include "WiFiManager.h"         //https://github.com/tzapu/WiFiManager
 
 #include "heweather.h"
 
