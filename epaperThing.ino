@@ -1,46 +1,39 @@
+#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+
+//needed for library
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include "WiFiManager.h"          //https://github.com/tzapu/WiFiManager
 #include <SPI.h>
 #include <Time.h>
 #include <Timezone.h>
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
-#include "WiFiManager.h"         //https://github.com/tzapu/WiFiManager
-
-#include "heweather.h"
-
 #include "epd2in9.h"
 #include "epdpaint.h"
-
-// 北京时间时区
-#define STD_TIMEZONE_OFFSET +8    // Standard Time offset (-7 is mountain time)
-// Define daylight savings time rules for the China
-TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
-Timezone myTZ(mySTD, mySTD);
-
-WiFiClient client;
-heweatherclient heweather();
+#include "NTP.h"
 
 #define COLORED     0
 #define UNCOLORED   1
-// Previous seconds value
-time_t previousSecond = 0;
-/**
-    Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
-    In this case, a smaller image buffer is allocated and you have to
-    update a partial display several times.
-    1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
-*/
+
+Epd epd;
 unsigned char image[1024];
 Paint paint(image, 0, 0);    // width should be the multiple of 8
-Epd epd;
-unsigned long time_start_ms;
-unsigned long time_now_s;
-
 int charSize = 50;
+
+// 北京时间时区
+#define STD_TIMEZONE_OFFSET +8
+TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
+Timezone myTZ(mySTD, mySTD);
+time_t previousSecond = 0;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  if (epd.Init(lut_full_update) != 0) {
+
+    if (epd.Init(lut_full_update) != 0) {
+    Serial.print("e-Paper init failed");
+    return;
+  }
+    if (epd.Init(lut_partial_update) != 0) {
     Serial.print("e-Paper init failed");
     return;
   }
@@ -55,34 +48,36 @@ void setup() {
   epd.DisplayFrame();
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
-
-
-  paint.SetWidth(32);
-  paint.SetHeight(250);
-  paint.SetRotate(ROTATE_90);
-  paint.Clear(UNCOLORED);
-  paint.DrawStringAt(0, 4, "wifi connecting...", &Font20, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
-  epd.DisplayFrame();
   
-
+  //WiFiManager
+  //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
-  wifiManager.autoConnect("ePaperThing");
+  //reset settings - for testing
+  //wifiManager.resetSettings();
+
+  //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
+  wifiManager.setAPCallback(configModeCallback);
+
+  //fetches ssid and pass and tries to connect
+  //if it does not connect it starts an access point with the specified name
+  //here  "AutoConnectAP"
+  //and goes into a blocking loop awaiting configuration
+  if(!wifiManager.autoConnect()) {
+    Serial.println("failed to connect and hit timeout");
+    //reset and try again, or maybe put it to deep sleep
+    ESP.reset();
+    delay(1000);
+  } 
+
+  //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
 
-  initNTP();
 
-
-  if (epd.Init(lut_partial_update) != 0) {
-    Serial.print("e-Paper init failed");
-    return;
-  }
-  time_start_ms = millis();
+   initNTP();
 }
 
 void loop() {
-
-  //  Update the display only if time has changed
+    //  Update the display only if time has changed
   if (timeStatus() != timeNotSet) {
     if (second() != previousSecond) {
       previousSecond = second();
@@ -91,6 +86,17 @@ void loop() {
     }
   }
   delay(500);
+
+}
+
+void configModeCallback (WiFiManager *myWiFiManager) {
+  paint.SetWidth(32);
+  paint.SetHeight(250);
+  paint.SetRotate(ROTATE_90);
+  paint.Clear(UNCOLORED);
+  paint.DrawStringAt(0, 4, "check wifi connect !!", &Font20, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
+  epd.DisplayFrame();
 }
 
 void updateDisplay(void) {
