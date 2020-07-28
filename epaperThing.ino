@@ -29,11 +29,11 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-    if (epd.Init(lut_full_update) != 0) {
+  if (epd.Init(lut_full_update) != 0) {
     Serial.print("e-Paper init failed");
     return;
   }
-    if (epd.Init(lut_partial_update) != 0) {
+  if (epd.Init(lut_partial_update) != 0) {
     Serial.print("e-Paper init failed");
     return;
   }
@@ -48,7 +48,7 @@ void setup() {
   epd.DisplayFrame();
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
-  
+
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
@@ -62,22 +62,22 @@ void setup() {
   //if it does not connect it starts an access point with the specified name
   //here  "AutoConnectAP"
   //and goes into a blocking loop awaiting configuration
-  if(!wifiManager.autoConnect("ePaperThing")) {
+  if (!wifiManager.autoConnect("ePaperThing")) {
     Serial.println("failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
     ESP.reset();
     delay(1000);
-  } 
+  }
 
   //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
 
 
-   initNTP();
+  initNTP();
 }
 
 void loop() {
-    //  Update the display only if time has changed
+  //  Update the display only if time has changed
   if (timeStatus() != timeNotSet) {
     if (second() != previousSecond) {
       previousSecond = second();
@@ -87,6 +87,13 @@ void loop() {
   }
   delay(500);
 
+
+  //清除屏幕残影
+//  epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
+//  epd.DisplayFrame();
+//  delay(1000);
+//  epd.ClearFrameMemory(0x00);   // bit set = white, bit reset = black
+//  epd.DisplayFrame();
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
@@ -155,7 +162,7 @@ void updateDisplay(void) {
   }
   String myTime = h + ":" + m ;
   String myDate = String(years) + "-" + mm + "-" + dd;
-  String myWeek = w.substring(0,3);
+  String myWeek = w.substring(0, 3);
   Serial.println("-----------------");
   Serial.println("myTime: " + myTime);
   Serial.println("myDate: " + myDate);
