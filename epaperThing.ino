@@ -62,7 +62,7 @@ void setup() {
   //if it does not connect it starts an access point with the specified name
   //here  "AutoConnectAP"
   //and goes into a blocking loop awaiting configuration
-  if(!wifiManager.autoConnect()) {
+  if(!wifiManager.autoConnect("ePaperThing")) {
     Serial.println("failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
     ESP.reset();
@@ -117,21 +117,6 @@ void updateDisplay(void) {
   int seconds =   second(localTime);
   int minutes =   minute(localTime);
   int hours   =   hour(localTime) ;   //12 hour format use : hourFormat12(localTime)  isPM()/isAM()
-  Serial.println("");
-  Serial.print("Current local time:");
-  Serial.print(days);
-  Serial.print("/");
-  Serial.print(months);
-  Serial.print("/");
-  Serial.print(years);
-  Serial.print(" - ");
-  Serial.print(hours);
-  Serial.print(":");
-  Serial.print(minutes);
-  Serial.print(":");
-  Serial.print(seconds);
-  Serial.print(" - ");
-  Serial.print(dayStr(weekdays));
 
   /////process time///////
   String h = "";
@@ -168,31 +153,34 @@ void updateDisplay(void) {
   } else {
     dd = String(days);
   }
-  String mytime = h + ":" + m ;
-  String mydate = String(years) + "-" + mm + "-" + dd;
-  Serial.println("mytime: " + mytime);
-  Serial.println("mydate: " + mydate);
+  String myTime = h + ":" + m ;
+  String myDate = String(years) + "-" + mm + "-" + dd;
+  String myWeek = w.substring(0,3);
+  Serial.println("-----------------");
+  Serial.println("myTime: " + myTime);
+  Serial.println("myDate: " + myDate);
+  Serial.println("myWeek: " + myWeek);
 
   paint.SetWidth(32);
   paint.SetHeight(250);
   paint.SetRotate(ROTATE_90);
 
   paint.Clear(UNCOLORED);
-  char __mytime[charSize];
-  mytime.toCharArray(__mytime, charSize);
-  paint.DrawStringAt(0, 4, __mytime , &Font24, COLORED);
+  char __myTime[charSize];
+  myTime.toCharArray(__myTime, charSize);
+  paint.DrawStringAt(0, 4, __myTime , &Font24, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 100, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  char __myweek[charSize];
-  w.toCharArray(__myweek, charSize);
-  paint.DrawStringAt(0, 4, __myweek, &Font24, COLORED);
+  char __myWeek[charSize];
+  myWeek.toCharArray(__myWeek, charSize);
+  paint.DrawStringAt(0, 4, __myWeek, &Font24, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 100, 110, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  char __mydate[charSize];
-  mydate.toCharArray(__mydate, charSize);
-  paint.DrawStringAt(0, 4, __mydate, &Font24, COLORED);
+  char __myDate[charSize];
+  myDate.toCharArray(__myDate, charSize);
+  paint.DrawStringAt(0, 4, __myDate, &Font24, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 70, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
