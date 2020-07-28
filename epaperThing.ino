@@ -74,6 +74,7 @@ void setup() {
 
 
   initNTP();
+
 }
 
 void loop() {
@@ -86,14 +87,6 @@ void loop() {
     }
   }
   delay(500);
-
-
-  //清除屏幕残影
-//  epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
-//  epd.DisplayFrame();
-//  delay(1000);
-//  epd.ClearFrameMemory(0x00);   // bit set = white, bit reset = black
-//  epd.DisplayFrame();
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
@@ -104,6 +97,7 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   paint.DrawStringAt(0, 4, "check wifi connect !!", &Font20, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
   epd.DisplayFrame();
+  delay(500);
 }
 
 void updateDisplay(void) {
@@ -204,5 +198,13 @@ void updateDisplay(void) {
   paint.DrawStringAt(0, 4, __second, &Font20, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
 
+  epd.DisplayFrame();
+}
+void clearEpaper(){
+  //清除屏幕残影
+  epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
+  epd.DisplayFrame();
+  delay(1000);
+  epd.ClearFrameMemory(0x00);   // bit set = white, bit reset = black
   epd.DisplayFrame();
 }
