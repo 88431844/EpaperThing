@@ -92,6 +92,7 @@ void loop() {
   }
   delay(500);
 
+// forceClearEpaper();
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
