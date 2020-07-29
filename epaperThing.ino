@@ -1,6 +1,7 @@
-#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 
 //needed for library
+#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+#include "NTP.h"
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include "WiFiManager.h"          //https://github.com/tzapu/WiFiManager
@@ -9,7 +10,6 @@
 #include <Timezone.h>
 #include "epd2in9.h"
 #include "epdpaint.h"
-#include "NTP.h"
 
 #define COLORED     0
 #define UNCOLORED   1
@@ -24,6 +24,8 @@ int charSize = 50;
 TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
 Timezone myTZ(mySTD, mySTD);
 time_t previousSecond = 0;
+
+bool isClear = false;
 
 void setup() {
   // put your setup code here, to run once:
@@ -49,6 +51,8 @@ void setup() {
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
 
+  wifiStatus("wifi connecting ..");
+
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
@@ -70,11 +74,11 @@ void setup() {
   }
 
   //if you get here you have connected to the WiFi
-  Serial.println("connected...yeey :)");
+  Serial.println("connected...");
 
+  wifiStatus("wifi connected !!");
 
   initNTP();
-
 }
 
 void loop() {
@@ -87,17 +91,11 @@ void loop() {
     }
   }
   delay(500);
+
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
-  paint.SetWidth(32);
-  paint.SetHeight(250);
-  paint.SetRotate(ROTATE_90);
-  paint.Clear(UNCOLORED);
-  paint.DrawStringAt(0, 4, "check wifi connect !!", &Font20, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
-  epd.DisplayFrame();
-  delay(500);
+  wifiStatus("check wifi connect");
 }
 
 void updateDisplay(void) {
@@ -200,11 +198,29 @@ void updateDisplay(void) {
 
   epd.DisplayFrame();
 }
-void clearEpaper(){
+void clearEpaper() {
   //清除屏幕残影
-  epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
+  paint.Clear(UNCOLORED);
+  delay(1000);
+  paint.Clear(COLORED);
+}
+void forceClearEpaper() {
+  epd.ClearFrameMemory(0xFF);   
   epd.DisplayFrame();
   delay(1000);
-  epd.ClearFrameMemory(0x00);   // bit set = white, bit reset = black
+  epd.ClearFrameMemory(0x00);   
   epd.DisplayFrame();
+}
+void wifiStatus(String status) {
+  clearEpaper();
+  paint.SetWidth(32);
+  paint.SetHeight(250);
+  paint.SetRotate(ROTATE_90);
+  paint.Clear(UNCOLORED);
+  char __status[100];
+  status.toCharArray(__status, 100);
+  paint.DrawStringAt(0, 4, __status, &Font20, COLORED);
+  epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
+  epd.DisplayFrame();
+  delay(1000);
 }
