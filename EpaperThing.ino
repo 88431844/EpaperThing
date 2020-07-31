@@ -3,13 +3,13 @@
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 #include "NTP.h"
 #include <DNSServer.h>
-#include <ESP8266WebServer.h>
 #include "WiFiManager.h"          //https://github.com/tzapu/WiFiManager
 #include <SPI.h>
 #include <Time.h>
 #include <Timezone.h>
 #include "epd2in9.h"
 #include "epdpaint.h"
+#include "DHTesp.h"
 
 #define COLORED     0
 #define UNCOLORED   1
@@ -25,7 +25,7 @@ TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
 Timezone myTZ(mySTD, mySTD);
 time_t previousSecond = 0;
 
-bool isClear = false;
+DHTesp dht;
 
 void setup() {
   // put your setup code here, to run once:
@@ -79,6 +79,8 @@ void setup() {
   wifiStatus("wifi connected !!");
 
   initNTP();
+
+  dht.setup(2, DHTesp::DHT11); // Connect DHT sensor to GPIO 2(D4)
 }
 
 void loop() {
@@ -92,7 +94,7 @@ void loop() {
   }
   delay(500);
 
-// forceClearEpaper();
+  // forceClearEpaper();
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
@@ -161,6 +163,13 @@ void updateDisplay(void) {
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
 
+  /////process temp///////
+  float humidity = dht.getHumidity();
+  float temperature = dht.getTemperature();
+  String humidityStr = "hum:"+String(humidity);
+  String temperatureStr = "temp:"+String(temperature);
+
+  /////process display///////
   paint.SetWidth(32);
   paint.SetHeight(250);
   paint.SetRotate(ROTATE_90);
@@ -184,14 +193,16 @@ void updateDisplay(void) {
   epd.SetFrameMemory(paint.GetImage(), 70, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  String first =  "bad artists copy";
+//  String first =  "bad artists copy";
+  String first =  humidityStr;
   char __first[100];
   first.toCharArray(__first, 100);
   paint.DrawStringAt(0, 4, __first, &Font20, COLORED);
   epd.SetFrameMemory(paint.GetImage(), 35, 0, paint.GetWidth(), paint.GetHeight());
 
   paint.Clear(UNCOLORED);
-  String second =  "good artists steal";
+//  String second =  "good artists steal";
+  String second =  temperatureStr;
   char __second[100];
   second.toCharArray(__second, 100);
   paint.DrawStringAt(0, 4, __second, &Font20, COLORED);
@@ -206,10 +217,10 @@ void clearEpaper() {
   paint.Clear(COLORED);
 }
 void forceClearEpaper() {
-  epd.ClearFrameMemory(0xFF);   
+  epd.ClearFrameMemory(0xFF);
   epd.DisplayFrame();
   delay(1000);
-  epd.ClearFrameMemory(0x00);   
+  epd.ClearFrameMemory(0x00);
   epd.DisplayFrame();
 }
 void wifiStatus(String status) {
