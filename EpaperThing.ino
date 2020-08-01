@@ -10,6 +10,18 @@
 #include "epd2in9.h"
 #include "epdpaint.h"
 #include "DHTesp.h"
+#include <Arduino.h>
+#include <U8g2lib.h>
+
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+#ifdef U8X8_HAVE_HW_I2C
+#include <Wire.h>
+#endif
+
+U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
+
 
 #define COLORED     0
 #define UNCOLORED   1
@@ -23,9 +35,10 @@ int charSize = 50;
 #define STD_TIMEZONE_OFFSET +8
 TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
 Timezone myTZ(mySTD, mySTD);
-time_t previousSecond = 0;
+time_t previousMinute = 0;
 
 DHTesp dht;
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -81,13 +94,17 @@ void setup() {
   initNTP();
 
   dht.setup(2, DHTesp::DHT11); // Connect DHT sensor to GPIO 2(D4)
+
+
+  u8g2.begin();
+  u8g2.enableUTF8Print();
 }
 
 void loop() {
   //  Update the display only if time has changed
   if (timeStatus() != timeNotSet) {
-    if (second() != previousSecond) {
-      previousSecond = second();
+    if (minute() != previousMinute) {
+      previousMinute = minute();
       // Update the display
       updateDisplay();
     }
@@ -166,49 +183,21 @@ void updateDisplay(void) {
   /////process temp///////
   float humidity = dht.getHumidity();
   float temperature = dht.getTemperature();
-  String humidityStr = "hum:"+String(humidity);
-  String temperatureStr = "temp:"+String(temperature);
+  String humidityStr = String(humidity);
+  String temperatureStr = String(temperature);
 
-  /////process display///////
-  paint.SetWidth(32);
-  paint.SetHeight(250);
-  paint.SetRotate(ROTATE_90);
+  u8g2.firstPage();
+  do {
+    u8g2.setFont(u8g2_font_logisoso78_tn);
+    u8g2.setCursor(18, 83);
+    u8g2.print(myTime);
 
-  paint.Clear(UNCOLORED);
-  char __myTime[charSize];
-  myTime.toCharArray(__myTime, charSize);
-  paint.DrawStringAt(0, 4, __myTime , &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 100, 0, paint.GetWidth(), paint.GetHeight());
+    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    u8g2.setCursor(0, 110);
+    u8g2.print("温度：" + temperatureStr + " 湿度："+humidityStr);
+  } while ( u8g2.nextPage() );
+  delay(1000);
 
-  paint.Clear(UNCOLORED);
-  char __myWeek[charSize];
-  myWeek.toCharArray(__myWeek, charSize);
-  paint.DrawStringAt(0, 4, __myWeek, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 100, 110, paint.GetWidth(), paint.GetHeight());
-
-  paint.Clear(UNCOLORED);
-  char __myDate[charSize];
-  myDate.toCharArray(__myDate, charSize);
-  paint.DrawStringAt(0, 4, __myDate, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 70, 0, paint.GetWidth(), paint.GetHeight());
-
-  paint.Clear(UNCOLORED);
-//  String first =  "bad artists copy";
-  String first =  humidityStr;
-  char __first[100];
-  first.toCharArray(__first, 100);
-  paint.DrawStringAt(0, 4, __first, &Font20, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 35, 0, paint.GetWidth(), paint.GetHeight());
-
-  paint.Clear(UNCOLORED);
-//  String second =  "good artists steal";
-  String second =  temperatureStr;
-  char __second[100];
-  second.toCharArray(__second, 100);
-  paint.DrawStringAt(0, 4, __second, &Font20, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
-
-  epd.DisplayFrame();
 }
 void clearEpaper() {
   //清除屏幕残影
