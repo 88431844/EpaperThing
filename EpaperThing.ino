@@ -7,22 +7,11 @@
 #include <SPI.h>
 #include <Time.h>
 #include <Timezone.h>
-#include "epd2in9.h"
-#include "epdpaint.h"
 #include "DHTesp.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
 
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
-
-
-#define COLORED     0
-#define UNCOLORED   1
-
-Epd epd;
-unsigned char image[1024];
-Paint paint(image, 0, 0);    // width should be the multiple of 8
-int charSize = 50;
 
 // 北京时间时区
 #define STD_TIMEZONE_OFFSET +8
@@ -37,41 +26,13 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  if (epd.Init(lut_full_update) != 0) {
-    Serial.print("e-Paper init failed");
-    return;
-  }
-  if (epd.Init(lut_partial_update) != 0) {
-    Serial.print("e-Paper init failed");
-    return;
-  }
+  u8g2.begin();
+  u8g2.enableUTF8Print();
+  wifiStatus("WiFi连接中...");
 
-  /**
-      there are 2 memory areas embedded in the e-paper display
-      and once the display is refreshed, the memory area will be auto-toggled,
-      i.e. the next action of SetFrameMemory will set the other memory area
-      therefore you have to clear the frame memory twice.
-  */
-  epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
-  epd.DisplayFrame();
-  epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
-  epd.DisplayFrame();
-
-  wifiStatus("wifi connecting ..");
-
-  //WiFiManager
-  //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
-  //reset settings - for testing
-  //wifiManager.resetSettings();
 
-  //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
   wifiManager.setAPCallback(configModeCallback);
-
-  //fetches ssid and pass and tries to connect
-  //if it does not connect it starts an access point with the specified name
-  //here  "AutoConnectAP"
-  //and goes into a blocking loop awaiting configuration
   if (!wifiManager.autoConnect("ePaperThing")) {
     Serial.println("failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
@@ -82,15 +43,12 @@ void setup() {
   //if you get here you have connected to the WiFi
   Serial.println("connected...");
 
-  wifiStatus("wifi connected !!");
+  wifiStatus("WiFi连接成功！！！");
 
   initNTP();
 
   dht.setup(2, DHTesp::DHT11); // Connect DHT sensor to GPIO 2(D4)
 
-
-  u8g2.begin();
-  u8g2.enableUTF8Print();
 }
 
 void loop() {
@@ -103,12 +61,10 @@ void loop() {
     }
   }
   delay(500);
-
-  // forceClearEpaper();
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
-  wifiStatus("check wifi connect");
+  wifiStatus("请检查WiFi连接后重启");
 }
 
 void updateDisplay(void) {
@@ -196,31 +152,13 @@ void updateDisplay(void) {
   } while ( u8g2.nextPage() );
 
 }
-void clearEpaper() {
-  //清除屏幕残影
-  paint.Clear(UNCOLORED);
-  delay(1000);
-  paint.Clear(COLORED);
-}
-void forceClearEpaper() {
-  epd.ClearFrameMemory(0xFF);
-  epd.DisplayFrame();
-  delay(1000);
-  epd.ClearFrameMemory(0x00);
-  epd.DisplayFrame();
-}
-void wifiStatus(String status) {
-  clearEpaper();
-  paint.SetWidth(32);
-  paint.SetHeight(250);
-  paint.SetRotate(ROTATE_90);
-  paint.Clear(UNCOLORED);
-  char __status[100];
-  status.toCharArray(__status, 100);
-  paint.DrawStringAt(0, 4, __status, &Font20, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
-  epd.DisplayFrame();
-  delay(1000);
+void wifiStatus(String myStatus) {
+  u8g2.firstPage();
+  do {
+    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    u8g2.setCursor(80, 70);
+    u8g2.print(myStatus);
+  } while ( u8g2.nextPage() );
 }
 String changeWeek(int weekSum){
   if(7 == weekSum){
