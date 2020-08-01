@@ -167,13 +167,14 @@ void updateDisplay(void) {
   } else {
     mm = String(months);
   }
+  
   if (days < 10 ) {
     dd = "0" + String(days);
   } else {
     dd = String(days);
   }
   String myTime = h + ":" + m ;
-  String myDate = String(years) + "-" + mm + "-" + dd;
+  String myDate = mm + "月" + dd + "日";
   String myWeek = w.substring(0, 3);
   Serial.println("-----------------");
   Serial.println("myTime: " + myTime);
@@ -193,10 +194,13 @@ void updateDisplay(void) {
     u8g2.print(myTime);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(0, 110);
-    u8g2.print("温度：" + temperatureStr + " 湿度："+humidityStr);
+    u8g2.setCursor(0, 100);
+    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr);
+
+    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    u8g2.setCursor(0, 120);
+    u8g2.print(myDate + " 星期" + changeWeek(weekdays));
   } while ( u8g2.nextPage() );
-  delay(1000);
 
 }
 void clearEpaper() {
@@ -224,4 +228,27 @@ void wifiStatus(String status) {
   epd.SetFrameMemory(paint.GetImage(), 40, 0, paint.GetWidth(), paint.GetHeight());
   epd.DisplayFrame();
   delay(1000);
+}
+String changeWeek(int weekSum){
+  if(7 == weekSum){
+    return "日";
+  }
+    if(6 == weekSum){
+    return "六";
+  }
+    if(5 == weekSum){
+    return "五";
+  }
+    if(4 == weekSum){
+    return "四";
+  }
+    if(3 == weekSum){
+    return "三";
+  }
+    if(2 == weekSum){
+    return "二";
+  }
+    if(1 == weekSum){
+    return "一";
+  }
 }
