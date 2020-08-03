@@ -49,6 +49,8 @@ void setup() {
 
   u8g2.begin();
   u8g2.enableUTF8Print();
+  // charge pump still active after .begin()
+  u8g2.setPowerSave(1);  // set power save mode: disable charge pump
   wifiStatus("WiFi连接中...");
 
   WiFiManager wifiManager;
@@ -137,7 +139,7 @@ void updateDisplay(void) {
   } else {
     mm = String(months);
   }
-  
+
   if (days < 10 ) {
     dd = "0" + String(days);
   } else {
@@ -150,26 +152,26 @@ void updateDisplay(void) {
   Serial.println("myTime: " + myTime);
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
-  
+
   //////process weather////////
-  currentWeatherClient.setMetric(IS_METRIC);
-  currentWeatherClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
-  currentWeatherClient.updateCurrentById(&currentWeather, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID);
-  Serial.println("Updating forecasts...");
-  forecastClient.setMetric(IS_METRIC);
-  forecastClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
-  uint8_t allowedHours[] = {12};
-  forecastClient.setAllowedHours(allowedHours, sizeof(allowedHours));
-  forecastClient.updateForecastsById(forecasts, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID, MAX_FORECASTS);
+  //  currentWeatherClient.setMetric(IS_METRIC);
+  //  currentWeatherClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
+  //  currentWeatherClient.updateCurrentById(&currentWeather, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID);
+  //  Serial.println("Updating forecasts...");
+  //  forecastClient.setMetric(IS_METRIC);
+  //  forecastClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
+  //  uint8_t allowedHours[] = {12};
+  //  forecastClient.setAllowedHours(allowedHours, sizeof(allowedHours));
+  //  forecastClient.updateForecastsById(forecasts, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID, MAX_FORECASTS);
+  //
+  //  readyForWeatherUpdate = false;
+  //  Serial.println("Done...");
+  //
+  //  String myWeather = currentWeather.description;
+  //  String myTemp = String(currentWeather.temp);
+  //  Serial.println("myWeather：" + myWeather);
+  //  Serial.println("myTemp：" + myTemp);
 
-  readyForWeatherUpdate = false;
-  Serial.println("Done...");
-
-  String myWeather = currentWeather.description;
-  String myTemp = String(currentWeather.temp);
-  Serial.println("myWeather：" + myWeather);
-  Serial.println("myTemp：" + myTemp);
-  
   /////process temp///////
   float humidity = dht.getHumidity();
   float temperature = dht.getTemperature();
@@ -177,20 +179,25 @@ void updateDisplay(void) {
   String temperatureStr = String(temperature);
 
   //////process display////////
+  u8g2.setPowerSave(0);  // before drawing, enable charge pump (req. 300ms)
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_logisoso78_tn);
     u8g2.setCursor(18, 83);
     u8g2.print(myTime);
-
-    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(0, 100);
-    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr);
+    //    u8g2.setFont(u8g2_font_logisoso78_tn);
+    //    u8g2.drawStr(18, 83, myTime);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 120);
+    //    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr + " 室外：" + myTemp + "|" + myWeather);
+    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr);
+
+    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    u8g2.setCursor(60, 100);
     u8g2.print(myDate + " 星期" + changeWeek(weekdays));
   } while ( u8g2.nextPage() );
+  u8g2.setPowerSave(1);  // disable charge pump
 
 }
 void wifiStatus(String myStatus) {
@@ -201,27 +208,27 @@ void wifiStatus(String myStatus) {
     u8g2.print(myStatus);
   } while ( u8g2.nextPage() );
 }
-String changeWeek(int weekSum){
-  
-  if(1 == weekSum){
+String changeWeek(int weekSum) {
+
+  if (1 == weekSum) {
     return "日";
   }
-    if(7 == weekSum){
+  if (7 == weekSum) {
     return "六";
   }
-    if(6 == weekSum){
+  if (6 == weekSum) {
     return "五";
   }
-    if(5 == weekSum){
+  if (5 == weekSum) {
     return "四";
   }
-    if(4 == weekSum){
+  if (4 == weekSum) {
     return "三";
   }
-    if(3 == weekSum){
+  if (3 == weekSum) {
     return "二";
   }
-    if(2 == weekSum){
+  if (2 == weekSum) {
     return "一";
   }
 }
