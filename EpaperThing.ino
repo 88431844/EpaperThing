@@ -10,6 +10,8 @@
 #include "DHTesp.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include "OpenWeatherMapCurrent.h" //lib: ESP8266 Weather Station
+#include "OpenWeatherMapForecast.h"
 
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
 
@@ -20,6 +22,25 @@ Timezone myTZ(mySTD, mySTD);
 time_t previousMinute = 0;
 
 DHTesp dht;
+
+String OPEN_WEATHER_MAP_APP_ID = "5b254b901fb5d41b5eb4bf6c3dfe3894";
+String OPEN_WEATHER_MAP_LOCATION_ID = "1816971";//保定；1816670 北京
+// Pick a language code from this list:
+// Arabic - ar, Bulgarian - bg, Catalan - ca, Czech - cz, German - de, Greek - el,
+// English - en, Persian (Farsi) - fa, Finnish - fi, French - fr, Galician - gl,
+// Croatian - hr, Hungarian - hu, Italian - it, Japanese - ja, Korean - kr,
+// Latvian - la, Lithuanian - lt, Macedonian - mk, Dutch - nl, Polish - pl,
+// Portuguese - pt, Romanian - ro, Russian - ru, Swedish - se, Slovak - sk,
+// Slovenian - sl, Spanish - es, Turkish - tr, Ukrainian - ua, Vietnamese - vi,
+// Chinese Simplified - zh_cn, Chinese Traditional - zh_tw.
+String OPEN_WEATHER_MAP_LANGUAGE = "zh_cn";
+const uint8_t MAX_FORECASTS = 4;
+const boolean IS_METRIC = true;
+OpenWeatherMapCurrent currentWeatherClient;
+OpenWeatherMapCurrentData currentWeather;
+OpenWeatherMapForecast forecastClient;
+OpenWeatherMapForecastData forecasts[MAX_FORECASTS];
+bool readyForWeatherUpdate = false;
 
 
 void setup() {
@@ -129,13 +150,33 @@ void updateDisplay(void) {
   Serial.println("myTime: " + myTime);
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
+  
+  //////process weather////////
+  currentWeatherClient.setMetric(IS_METRIC);
+  currentWeatherClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
+  currentWeatherClient.updateCurrentById(&currentWeather, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID);
+  Serial.println("Updating forecasts...");
+  forecastClient.setMetric(IS_METRIC);
+  forecastClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
+  uint8_t allowedHours[] = {12};
+  forecastClient.setAllowedHours(allowedHours, sizeof(allowedHours));
+  forecastClient.updateForecastsById(forecasts, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID, MAX_FORECASTS);
 
+  readyForWeatherUpdate = false;
+  Serial.println("Done...");
+
+  String myWeather = currentWeather.description;
+  String myTemp = String(currentWeather.temp);
+  Serial.println("myWeather：" + myWeather);
+  Serial.println("myTemp：" + myTemp);
+  
   /////process temp///////
   float humidity = dht.getHumidity();
   float temperature = dht.getTemperature();
   String humidityStr = String(humidity);
   String temperatureStr = String(temperature);
 
+  //////process display////////
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_logisoso78_tn);
@@ -161,25 +202,26 @@ void wifiStatus(String myStatus) {
   } while ( u8g2.nextPage() );
 }
 String changeWeek(int weekSum){
-  if(7 == weekSum){
+  
+  if(1 == weekSum){
     return "日";
   }
-    if(6 == weekSum){
+    if(7 == weekSum){
     return "六";
   }
-    if(5 == weekSum){
+    if(6 == weekSum){
     return "五";
   }
-    if(4 == weekSum){
+    if(5 == weekSum){
     return "四";
   }
-    if(3 == weekSum){
+    if(4 == weekSum){
     return "三";
   }
-    if(2 == weekSum){
+    if(3 == weekSum){
     return "二";
   }
-    if(1 == weekSum){
+    if(2 == weekSum){
     return "一";
   }
 }
