@@ -182,31 +182,38 @@ void updateDisplay(void) {
   u8g2.setPowerSave(0);  // before drawing, enable charge pump (req. 300ms)
   u8g2.firstPage();
   do {
-    u8g2.setFont(u8g2_font_logisoso78_tn);
-    u8g2.setCursor(18, 83);
-    u8g2.print(myTime);
     //    u8g2.setFont(u8g2_font_logisoso78_tn);
-    //    u8g2.drawStr(18, 83, myTime);
-
+    //    u8g2.setCursor(18, 83);
+    //    u8g2.print(myTime);
+    
+    u8g2.setFont(u8g2_font_logisoso78_tn);
+    char __myTime[sizeof(myTime)];
+    myTime.toCharArray(__myTime, sizeof(__myTime));
+    u8g2.drawStr(18, 83, __myTime);
+//
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 120);
-    //    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr + " 室外：" + myTemp + "|" + myWeather);
+//    //    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr + " 室外：" + myTemp + "|" + myWeather);
     u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(60, 100);
     u8g2.print(myDate + " 星期" + changeWeek(weekdays));
+
   } while ( u8g2.nextPage() );
   u8g2.setPowerSave(1);  // disable charge pump
 
 }
 void wifiStatus(String myStatus) {
+  u8g2.setPowerSave(0);  // before drawing, enable charge pump (req. 300ms)
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(80, 70);
     u8g2.print(myStatus);
   } while ( u8g2.nextPage() );
+  u8g2.setPowerSave(1);  // disable charge pump
+
 }
 String changeWeek(int weekSum) {
 
