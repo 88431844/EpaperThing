@@ -10,8 +10,6 @@
 #include "DHTesp.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
-#include "OpenWeatherMapCurrent.h" //lib: ESP8266 Weather Station
-#include "OpenWeatherMapForecast.h"
 
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
 
@@ -23,34 +21,12 @@ time_t previousMinute = 0;
 
 DHTesp dht;
 
-String OPEN_WEATHER_MAP_APP_ID = "5b254b901fb5d41b5eb4bf6c3dfe3894";
-String OPEN_WEATHER_MAP_LOCATION_ID = "1816971";//保定；1816670 北京
-// Pick a language code from this list:
-// Arabic - ar, Bulgarian - bg, Catalan - ca, Czech - cz, German - de, Greek - el,
-// English - en, Persian (Farsi) - fa, Finnish - fi, French - fr, Galician - gl,
-// Croatian - hr, Hungarian - hu, Italian - it, Japanese - ja, Korean - kr,
-// Latvian - la, Lithuanian - lt, Macedonian - mk, Dutch - nl, Polish - pl,
-// Portuguese - pt, Romanian - ro, Russian - ru, Swedish - se, Slovak - sk,
-// Slovenian - sl, Spanish - es, Turkish - tr, Ukrainian - ua, Vietnamese - vi,
-// Chinese Simplified - zh_cn, Chinese Traditional - zh_tw.
-String OPEN_WEATHER_MAP_LANGUAGE = "zh_cn";
-const uint8_t MAX_FORECASTS = 4;
-const boolean IS_METRIC = true;
-OpenWeatherMapCurrent currentWeatherClient;
-OpenWeatherMapCurrentData currentWeather;
-OpenWeatherMapForecast forecastClient;
-OpenWeatherMapForecastData forecasts[MAX_FORECASTS];
-bool readyForWeatherUpdate = false;
-
-
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
   u8g2.begin();
   u8g2.enableUTF8Print();
-  // charge pump still active after .begin()
-  u8g2.setPowerSave(1);  // set power save mode: disable charge pump
   wifiStatus("WiFi连接中...");
 
   WiFiManager wifiManager;
@@ -153,25 +129,6 @@ void updateDisplay(void) {
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
 
-  //////process weather////////
-  //  currentWeatherClient.setMetric(IS_METRIC);
-  //  currentWeatherClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
-  //  currentWeatherClient.updateCurrentById(&currentWeather, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID);
-  //  Serial.println("Updating forecasts...");
-  //  forecastClient.setMetric(IS_METRIC);
-  //  forecastClient.setLanguage(OPEN_WEATHER_MAP_LANGUAGE);
-  //  uint8_t allowedHours[] = {12};
-  //  forecastClient.setAllowedHours(allowedHours, sizeof(allowedHours));
-  //  forecastClient.updateForecastsById(forecasts, OPEN_WEATHER_MAP_APP_ID, OPEN_WEATHER_MAP_LOCATION_ID, MAX_FORECASTS);
-  //
-  //  readyForWeatherUpdate = false;
-  //  Serial.println("Done...");
-  //
-  //  String myWeather = currentWeather.description;
-  //  String myTemp = String(currentWeather.temp);
-  //  Serial.println("myWeather：" + myWeather);
-  //  Serial.println("myTemp：" + myTemp);
-
   /////process temp///////
   float humidity = dht.getHumidity();
   float temperature = dht.getTemperature();
@@ -179,41 +136,31 @@ void updateDisplay(void) {
   String temperatureStr = String(temperature);
 
   //////process display////////
-  u8g2.setPowerSave(0);  // before drawing, enable charge pump (req. 300ms)
   u8g2.firstPage();
   do {
-    //    u8g2.setFont(u8g2_font_logisoso78_tn);
-    //    u8g2.setCursor(18, 83);
-    //    u8g2.print(myTime);
     
+    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    u8g2.setCursor(0, 20);
+    u8g2.print(myDate + " 星期" + changeWeek(weekdays));
+
     u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
-    u8g2.drawStr(18, 83, __myTime);
-//
+    u8g2.drawStr(0, 105, __myTime);
+
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(0, 120);
-//    //    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr + " 室外：" + myTemp + "|" + myWeather);
+    u8g2.setCursor(0, 123);
     u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr);
-
-    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(60, 100);
-    u8g2.print(myDate + " 星期" + changeWeek(weekdays));
-
   } while ( u8g2.nextPage() );
-  u8g2.setPowerSave(1);  // disable charge pump
 
 }
 void wifiStatus(String myStatus) {
-  u8g2.setPowerSave(0);  // before drawing, enable charge pump (req. 300ms)
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(80, 70);
     u8g2.print(myStatus);
   } while ( u8g2.nextPage() );
-  u8g2.setPowerSave(1);  // disable charge pump
-
 }
 String changeWeek(int weekSum) {
 
