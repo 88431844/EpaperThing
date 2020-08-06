@@ -139,8 +139,11 @@ void updateDisplay(void) {
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(0, 20);
-    u8g2.print(myDate + " 星期" + changeWeek(weekdays));
+    u8g2.setCursor(50, 20);
+    u8g2.print( myDate);
+    u8g2.setCursor(164, 20);
+    u8g2.print( " 星期" + changeWeek(weekdays));
+    
     
     u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
