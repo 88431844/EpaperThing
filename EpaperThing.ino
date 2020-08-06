@@ -138,15 +138,14 @@ void updateDisplay(void) {
   //////process display////////
   u8g2.firstPage();
   do {
-    
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 20);
     u8g2.print(myDate + " 星期" + changeWeek(weekdays));
-
+    
     u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
-    u8g2.drawStr(0, 105, __myTime);
+    u8g2.drawStr(18, 105, __myTime);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 123);
