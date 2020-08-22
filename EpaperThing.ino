@@ -18,6 +18,7 @@ U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, 
 TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
 Timezone myTZ(mySTD, mySTD);
 time_t previousMinute = 0;
+int lastTenMin = 0;
 
 DHTesp dht;
 
@@ -84,6 +85,14 @@ void updateDisplay(void) {
   int seconds =   second(localTime);
   int minutes =   minute(localTime);
   int hours   =   hour(localTime) ;   //12 hour format use : hourFormat12(localTime)  isPM()/isAM()
+  int thisTenMin = minutes/10;
+
+  //每隔十分钟，刷新一次屏幕
+  if(lastTenMin != thisTenMin){
+      u8g2.clear();
+      lastTenMin = thisTenMin;
+  }
+
 
   /////process time///////
   String h = "";
@@ -138,13 +147,16 @@ void updateDisplay(void) {
   //////process display////////
   u8g2.firstPage();
   do {
-    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(50, 20);
-    u8g2.print( myDate);
-    u8g2.setCursor(164, 20);
-    u8g2.print( " 星期" + changeWeek(weekdays));
-    
-    
+//    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+//    u8g2.setCursor(50, 20);
+//    u8g2.print( myDate);
+//    u8g2.setCursor(164, 20);
+//    u8g2.print( " 星期" + changeWeek(weekdays));
+
+u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+u8g2.setCursor(0, 20);
+u8g2.print(myDate + " 星期" + changeWeek(weekdays) + "|任职资格 OA018");
+
     u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
@@ -163,6 +175,8 @@ void wifiStatus(String myStatus) {
     u8g2.setCursor(80, 70);
     u8g2.print(myStatus);
   } while ( u8g2.nextPage() );
+
+  u8g2.clear();
 }
 String changeWeek(int weekSum) {
 
