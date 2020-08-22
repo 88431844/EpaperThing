@@ -21,7 +21,7 @@
 - name : 'Time' ,"authors" : "Michael Margolis" ,link : "https://github.com/PaulStoffregen/Time"
 - name : "Timezone" ,"authors" : "Jack Christensen" ,link : "https://github.com/JChristensen/Timezone"
 - name : "WifiManager" ,"" : "" ,link : "https://github.com/tzapu/WiFiManager"
-- name : "DHTesp" ,"authors" : "" ,link : "https://github.com/beegee-tokyo/DHTesp"
+- name : "DHTesp" ,"authors" : "beegee-tokyo" ,link : "https://github.com/beegee-tokyo/DHTesp"
 ### 串口驱动
 - CP210x USB to UART Bridge VCP Drivers ,link: "https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers"
 
