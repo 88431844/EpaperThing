@@ -85,12 +85,12 @@ void updateDisplay(void) {
   int seconds =   second(localTime);
   int minutes =   minute(localTime);
   int hours   =   hour(localTime) ;   //12 hour format use : hourFormat12(localTime)  isPM()/isAM()
-  int thisTenMin = minutes/10;
+  int thisTenMin = minutes / 10;
 
   //每隔十分钟，刷新一次屏幕
-  if(lastTenMin != thisTenMin){
-      u8g2.clear();
-      lastTenMin = thisTenMin;
+  if (lastTenMin != thisTenMin) {
+    u8g2.clear();
+    lastTenMin = thisTenMin;
   }
 
 
@@ -141,21 +141,16 @@ void updateDisplay(void) {
   /////process temp///////
   float humidity = dht.getHumidity();
   float temperature = dht.getTemperature();
-  String humidityStr = String(humidity);
-  String temperatureStr = String(temperature);
+  String humidityStr = String(humidity).substring(0, 2);
+  String temperatureStr = String(temperature).substring(0, 2);
 
   //////process display////////
   u8g2.firstPage();
   do {
-//    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-//    u8g2.setCursor(50, 20);
-//    u8g2.print( myDate);
-//    u8g2.setCursor(164, 20);
-//    u8g2.print( " 星期" + changeWeek(weekdays));
 
-u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-u8g2.setCursor(0, 20);
-u8g2.print(myDate + " 星期" + changeWeek(weekdays) + "|任职资格 OA018");
+    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    u8g2.setCursor(0, 20);
+    u8g2.print(myDate + " 星期" + changeWeek(weekdays) +"|"+"温度" + temperatureStr + " 湿度" + humidityStr);
 
     u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
@@ -164,7 +159,7 @@ u8g2.print(myDate + " 星期" + changeWeek(weekdays) + "|任职资格 OA018");
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 123);
-    u8g2.print("温度：" + temperatureStr + " 湿度：" + humidityStr);
+    u8g2.print("test");
   } while ( u8g2.nextPage() );
 
 }
