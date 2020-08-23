@@ -26,7 +26,7 @@ DHTesp dht;
 
 ESP8266WebServer esp8266_server(80);
 
-String todo = "";
+String todo = " 生命不息 折腾不止";
 
 void setup() {
   // put your setup code here, to run once:
@@ -159,18 +159,48 @@ void updateDisplay(String todo) {
   u8g2.firstPage();
   do {
 
-    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(0, 20);
-    u8g2.print(myDate + "|周" + changeWeek(weekdays) + "|" + "温度:" + temperatureStr + "|湿度:" + humidityStr);
+    //    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    //    u8g2.setCursor(0, 20);
+    //    u8g2.print(myDate + "|周" + changeWeek(weekdays) + "|" + "温度:" + temperatureStr + "|湿度:" + humidityStr);
 
-    u8g2.setFont(u8g2_font_logisoso78_tn);
+    //    u8g2.setFont(u8g2_font_logisoso78_tn);
+    //    char __myTime[sizeof(myTime)];
+    //    myTime.toCharArray(__myTime, sizeof(__myTime));
+    //    u8g2.drawStr(25, 105, __myTime);
+
+    //    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    //    u8g2.setCursor(0, 123);
+    //    u8g2.print(todo);
+
+    u8g2.setFont(u8g2_font_logisoso92_tn);
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
-    u8g2.drawStr(25, 105, __myTime);
+    u8g2.drawStr(5, 95, __myTime);
+
+    u8g2.drawFrame(0, 96, 294, 30);
+    u8g2.drawLine(141, 96, 141, 126);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(0, 123);
+    u8g2.setCursor(2, 117);
+    u8g2.print(myDate);
+
+    u8g2.drawLine(64, 96, 64, 126);
+    u8g2.setCursor(67, 117);
+    u8g2.print("周" + changeWeek(weekdays));
+
+    u8g2.drawLine(98, 96, 98, 126);
+    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
+    u8g2.setCursor(102, 110);
+    u8g2.print("温度" + temperatureStr);
+
+    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
+    u8g2.setCursor(102, 123);
+    u8g2.print("湿度" + humidityStr);
+
+    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
+    u8g2.setCursor(142, 117);
     u8g2.print(todo);
+
   } while ( u8g2.nextPage() );
 
 }
