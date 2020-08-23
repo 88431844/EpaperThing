@@ -10,6 +10,7 @@
 #include "DHTesp.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include <ESP8266WebServer.h>   //  ESP8266WebServer库
 
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
 
@@ -18,9 +19,13 @@ U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, 
 TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
 Timezone myTZ(mySTD, mySTD);
 time_t previousMinute = 0;
-int lastTenMin = 0;
+int lastHour = 0;
 
 DHTesp dht;
+
+ESP8266WebServer esp8266_server(80);
+
+String todo = "";
 
 void setup() {
   // put your setup code here, to run once:
@@ -49,15 +54,20 @@ void setup() {
 
   dht.setup(2, DHTesp::DHT11); // Connect DHT sensor to GPIO 2(D4)
 
+  webInit();
 }
 
 void loop() {
+
+
+  esp8266_server.handleClient();     // 处理http服务器访问
+
   //  Update the display only if time has changed
   if (timeStatus() != timeNotSet) {
     if (minute() != previousMinute) {
       previousMinute = minute();
       // Update the display
-      updateDisplay();
+      updateDisplay(todo);
     }
   }
   delay(500);
@@ -67,7 +77,7 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   wifiStatus("请检查WiFi连接后重启");
 }
 
-void updateDisplay(void) {
+void updateDisplay(String todo) {
 
   TimeChangeRule *tcr;        // Pointer to the time change rule
 
@@ -85,12 +95,12 @@ void updateDisplay(void) {
   int seconds =   second(localTime);
   int minutes =   minute(localTime);
   int hours   =   hour(localTime) ;   //12 hour format use : hourFormat12(localTime)  isPM()/isAM()
-  int thisTenMin = minutes / 10;
+  int thisHour = hours;
 
-  //每隔十分钟，刷新一次屏幕
-  if (lastTenMin != thisTenMin) {
-    u8g2.clear();
-    lastTenMin = thisTenMin;
+  //每隔1小时，刷新一次屏幕
+  if (lastHour != thisHour) {
+    clearDis();
+    lastHour = thisHour;
   }
 
 
@@ -150,7 +160,7 @@ void updateDisplay(void) {
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 20);
-    u8g2.print(myDate + " 星期" + changeWeek(weekdays) +"|"+"温度" + temperatureStr + " 湿度" + humidityStr);
+    u8g2.print(myDate + "|星期" + changeWeek(weekdays) + "|" + "温度:" + temperatureStr + "|湿度:" + humidityStr);
 
     u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
@@ -159,7 +169,7 @@ void updateDisplay(void) {
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 123);
-    u8g2.print("test");
+    u8g2.print(todo);
   } while ( u8g2.nextPage() );
 
 }
@@ -171,7 +181,7 @@ void wifiStatus(String myStatus) {
     u8g2.print(myStatus);
   } while ( u8g2.nextPage() );
 
-  u8g2.clear();
+  clearDis();
 }
 String changeWeek(int weekSum) {
 
@@ -196,4 +206,55 @@ String changeWeek(int weekSum) {
   if (2 == weekSum) {
     return "一";
   }
+}
+
+void handleRoot() {   //处理网站根目录“/”的访问请求
+  String content = "<!DOCTYPE html><html lang='zh-CN'><head><meta charset='UTF-8'></head><body><center><form action='TODO 'method='POST'><br>提醒事项：<input type='text'name='todo'value=''><br><br><br><input type='submit'value='更新提醒事项'></form><form action='CLEAR 'method='POST'><br><br><input type='submit'value='清屏'></form></center></body></html>";
+  esp8266_server.send(200, "text/html", content);   // NodeMCU将调用此函数。访问成功返回200状态码，返回信息类型text/html
+}
+
+// 设置处理404情况的函数'handleNotFound'
+void handleNotFound() { // 当浏览器请求的网络资源无法在服务器找到时，返回404状态码，和提升信息类型和内容
+  esp8266_server.send(404, "text/plain", "404: Not found");   // NodeMCU将调用此函数。
+}
+
+void handleTODO() {
+  todo = getParam("todo");
+  Serial.println("todo:" + todo);
+  handleCLEAR();
+}
+void handleCLEAR() {
+  clearDis();
+  returnRoot();
+  updateDisplay(todo);
+}
+String getParam(String name) {
+  //read parameter from server, for customhmtl input
+  String value;
+  if (esp8266_server.hasArg(name)) {
+    value = esp8266_server.arg(name);
+  }
+  return value;
+}
+
+void webInit() {
+
+  //--------"启动网络服务功能"程序部分开始--------
+  esp8266_server.begin();
+  esp8266_server.on("/", HTTP_GET, handleRoot); //访问网站的根目录 处理GET请求 执行handleRoot函数
+  esp8266_server.on("/TODO", HTTP_POST, handleTODO); //设置处理墨水屏提醒文字请求函数  处理POST请求
+  esp8266_server.on("/CLEAR", HTTP_POST, handleCLEAR); //设置处理墨水屏清理请求函数  处理POST请求
+  esp8266_server.onNotFound(handleNotFound);  //当请求服务器找不到时，执行handleNotFound函数
+  //--------"启动网络服务功能"程序部分结束--------
+  Serial.println("HTTP esp8266_server started");//  告知用户ESP8266网络服务功能已经启动
+}
+
+void returnRoot() {
+  esp8266_server.sendHeader("Location", "/");         // 跳转回页面根目录
+  esp8266_server.send(303);                           // 发送Http相应代码303 跳转
+}
+void clearDis() {
+  u8g2.clearDisplay();
+  delay(1000);
+  u8g2.clear();
 }
