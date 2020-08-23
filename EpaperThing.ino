@@ -12,6 +12,7 @@
 #include <U8g2lib.h>
 #include <ESP8266WebServer.h>   //  ESP8266WebServer库
 
+// !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
 
 // 北京时间时区
@@ -160,12 +161,12 @@ void updateDisplay(String todo) {
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 20);
-    u8g2.print(myDate + "|星期" + changeWeek(weekdays) + "|" + "温度:" + temperatureStr + "|湿度:" + humidityStr);
+    u8g2.print(myDate + "|周" + changeWeek(weekdays) + "|" + "温度:" + temperatureStr + "|湿度:" + humidityStr);
 
     u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
-    u8g2.drawStr(18, 105, __myTime);
+    u8g2.drawStr(25, 105, __myTime);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(0, 123);
@@ -254,8 +255,6 @@ void returnRoot() {
   esp8266_server.send(303);                           // 发送Http相应代码303 跳转
 }
 void clearDis() {
-  u8g2.clear();
-  delay(300);
   u8g2.clear();
   delay(300);
   u8g2.clear();
