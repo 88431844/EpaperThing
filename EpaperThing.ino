@@ -254,7 +254,11 @@ void returnRoot() {
   esp8266_server.send(303);                           // 发送Http相应代码303 跳转
 }
 void clearDis() {
-  u8g2.clearDisplay();
-  delay(1000);
+  u8g2.clear();
+  delay(300);
+  u8g2.clear();
+  delay(300);
+  u8g2.clear();
+  delay(300);
   u8g2.clear();
 }
