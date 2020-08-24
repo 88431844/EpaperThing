@@ -34,7 +34,7 @@ void setup() {
 
   u8g2.begin();
   u8g2.enableUTF8Print();
-  wifiStatus("WiFi连接中...");
+  wifiStatus("WiFi连接中...",true);
 
   WiFiManager wifiManager;
 
@@ -49,7 +49,7 @@ void setup() {
   //if you get here you have connected to the WiFi
   Serial.println("connected...");
 
-  wifiStatus("WiFi连接成功！！！");
+  wifiStatus("WiFi连接成功！！！",true);
 
   initNTP();
 
@@ -75,7 +75,7 @@ void loop() {
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
-  wifiStatus("请检查WiFi连接后重启");
+  wifiStatus("请检查WiFi连接后重启",false);
 }
 
 void updateDisplay(String todo) {
@@ -204,7 +204,7 @@ void updateDisplay(String todo) {
   } while ( u8g2.nextPage() );
 
 }
-void wifiStatus(String myStatus) {
+void wifiStatus(String myStatus,bool needClear) {
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
@@ -212,7 +212,9 @@ void wifiStatus(String myStatus) {
     u8g2.print(myStatus);
   } while ( u8g2.nextPage() );
 
-  clearDis();
+  if(needClear){
+      clearDis();
+  }
 }
 String changeWeek(int weekSum) {
 
