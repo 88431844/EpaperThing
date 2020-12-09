@@ -10,6 +10,7 @@
 - 温度
 - 湿度
 - 提醒事项
+- mDNS(通过EPaperThing.local可以访问esp启动的webServer页面)
 ### 计划实现：
 - 日历
 - 天气
