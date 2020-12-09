@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include <ESP8266WebServer.h>   //  ESP8266WebServer库
+#include <ESP8266mDNS.h>
 
 // !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
@@ -39,7 +40,7 @@ void setup() {
   WiFiManager wifiManager;
 
   wifiManager.setAPCallback(configModeCallback);
-  if (!wifiManager.autoConnect("ePaperThing")) {
+  if (!wifiManager.autoConnect("EPaperThing")) {
     Serial.println("failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
     ESP.reset();
@@ -56,11 +57,12 @@ void setup() {
   dht.setup(2, DHTesp::DHT11); // Connect DHT sensor to GPIO 2(D4)
 
   webInit();
+  myMDNSinit();
 }
 
 void loop() {
 
-
+  MDNS.update();
   esp8266_server.handleClient();     // 处理http服务器访问
 
   //  Update the display only if time has changed
@@ -292,4 +294,20 @@ void clearDis() {
   u8g2.clear();
   delay(300);
   u8g2.clear();
+}
+void myMDNSinit(){
+    // Set up mDNS responder:
+  // - first argument is the domain name, in this example
+  //   the fully-qualified domain name is "EPaperThing.local"
+  // - second argument is the IP address to advertise
+  //   we send our IP address on the WiFi network
+  if (!MDNS.begin("EPaperThing")) {
+    Serial.println("Error setting up MDNS responder!");
+    while (1) {
+      delay(1000);
+    }
+  }
+  Serial.println("mDNS responder started");
+    // Add service to MDNS-SD
+  MDNS.addService("http", "tcp", 80);
 }
