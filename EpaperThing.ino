@@ -1,5 +1,3 @@
-
-//needed for library
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 #include "NTP.h"
 #include <DNSServer.h>
@@ -7,14 +5,13 @@
 #include <SPI.h>
 #include <Time.h>
 #include <Timezone.h>
-#include "DHTesp.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
-#include <ESP8266WebServer.h>   //  ESP8266WebServer库
+#include <ESP8266WebServer.h>   //  ESP8266WebServer库·
 #include <ESP8266mDNS.h>
 
 // !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
-U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
+U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 2);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
 
 // 北京时间时区
 #define STD_TIMEZONE_OFFSET +8
@@ -22,8 +19,6 @@ TimeChangeRule mySTD = {"", First,  Sun, Jan, 0, STD_TIMEZONE_OFFSET * 60};
 Timezone myTZ(mySTD, mySTD);
 time_t previousMinute = 0;
 int lastHour = 0;
-
-DHTesp dht;
 
 ESP8266WebServer esp8266_server(80);
 
@@ -53,8 +48,6 @@ void setup() {
   wifiStatus("WiFi连接成功！！！",true);
 
   initNTP();
-
-  dht.setup(2, DHTesp::DHT11); // Connect DHT sensor to GPIO 2(D4)
 
   webInit();
   myMDNSinit();
@@ -151,53 +144,22 @@ void updateDisplay(String todo) {
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
 
-  /////process temp///////
-  float humidity = dht.getHumidity();
-  float temperature = dht.getTemperature();
-  String humidityStr = String(humidity).substring(0, 2);
-  String temperatureStr = String(temperature).substring(0, 2);
-
   //////process display////////
   u8g2.firstPage();
   do {
-
-    //    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    //    u8g2.setCursor(0, 20);
-    //    u8g2.print(myDate + "|周" + changeWeek(weekdays) + "|" + "温度:" + temperatureStr + "|湿度:" + humidityStr);
-
-    //    u8g2.setFont(u8g2_font_logisoso78_tn);
-    //    char __myTime[sizeof(myTime)];
-    //    myTime.toCharArray(__myTime, sizeof(__myTime));
-    //    u8g2.drawStr(25, 105, __myTime);
-
-    //    u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    //    u8g2.setCursor(0, 123);
-    //    u8g2.print(todo);
-
-    u8g2.setFont(u8g2_font_logisoso92_tn);
+    //u8g2_font_logisoso92_tn
+    u8g2.setFont(u8g2_font_logisoso78_tn);
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
     u8g2.drawStr(5, 95, __myTime);
-
-    u8g2.drawFrame(0, 96, 294, 30);
-    u8g2.drawLine(141, 96, 141, 126);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(2, 117);
     u8g2.print(myDate);
 
-    u8g2.drawLine(64, 96, 64, 126);
     u8g2.setCursor(67, 117);
     u8g2.print("周" + changeWeek(weekdays));
 
-    u8g2.drawLine(98, 96, 98, 126);
-    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
-    u8g2.setCursor(102, 110);
-    u8g2.print("温度" + temperatureStr);
-
-    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
-    u8g2.setCursor(102, 123);
-    u8g2.print("湿度" + humidityStr);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(142, 117);
