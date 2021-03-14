@@ -9,6 +9,9 @@
 #include <U8g2lib.h>
 #include <ESP8266WebServer.h>   //  ESP8266WebServer库·
 #include <ESP8266mDNS.h>
+#include "DEV_Config.h"
+#include "EPD.h"
+#include <stdlib.h>
 
 // !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 14, /* data=*/ 13, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 2);  // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
@@ -30,7 +33,7 @@ void setup() {
 
   u8g2.begin();
   u8g2.enableUTF8Print();
-  wifiStatus("WiFi连接中...",true);
+  wifiStatus("WiFi连接中...", true);
 
   WiFiManager wifiManager;
 
@@ -45,7 +48,7 @@ void setup() {
   //if you get here you have connected to the WiFi
   Serial.println("connected...");
 
-  wifiStatus("WiFi连接成功！！！",true);
+  wifiStatus("WiFi连接成功！！！", true);
 
   initNTP();
 
@@ -70,7 +73,7 @@ void loop() {
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
-  wifiStatus("请检查WiFi连接后重启",false);
+  wifiStatus("请检查WiFi连接后重启", false);
 }
 
 void updateDisplay(String todo) {
@@ -83,7 +86,7 @@ void updateDisplay(String todo) {
   // Convert to local time taking DST into consideration
   time_t localTime = myTZ.toLocal(utc, &tcr);
 
-  // Map time to pixel positions
+  // Map time to pixel pos78itions
   int weekdays =   weekday(localTime);
   int days    =   day(localTime);
   int months  =   month(localTime);
@@ -148,7 +151,7 @@ void updateDisplay(String todo) {
   u8g2.firstPage();
   do {
     //u8g2_font_logisoso92_tn
-    u8g2.setFont(u8g2_font_logisoso78_tn);
+    u8g2.setFont(u8g2_font_logisoso92_tn);
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
     u8g2.drawStr(5, 95, __myTime);
@@ -168,7 +171,7 @@ void updateDisplay(String todo) {
   } while ( u8g2.nextPage() );
 
 }
-void wifiStatus(String myStatus,bool needClear) {
+void wifiStatus(String myStatus, bool needClear) {
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
@@ -176,8 +179,8 @@ void wifiStatus(String myStatus,bool needClear) {
     u8g2.print(myStatus);
   } while ( u8g2.nextPage() );
 
-  if(needClear){
-      clearDis();
+  if (needClear) {
+    clearDis();
   }
 }
 String changeWeek(int weekSum) {
@@ -251,14 +254,16 @@ void returnRoot() {
   esp8266_server.send(303);                           // 发送Http相应代码303 跳转
 }
 void clearDis() {
-  u8g2.clear();
-  delay(300);
-  u8g2.clear();
-  delay(300);
-  u8g2.clear();
+  DEV_Module_Init();
+  EPD_2IN9_Init(EPD_2IN9_FULL);
+  EPD_2IN9_Clear();
+  DEV_Delay_ms(500);
+
+  u8g2.begin();
+  u8g2.enableUTF8Print();
 }
-void myMDNSinit(){
-    // Set up mDNS responder:
+void myMDNSinit() {
+  // Set up mDNS responder:
   // - first argument is the domain name, in this example
   //   the fully-qualified domain name is "EPaperThing.local"
   // - second argument is the IP address to advertise
@@ -270,6 +275,6 @@ void myMDNSinit(){
     }
   }
   Serial.println("mDNS responder started");
-    // Add service to MDNS-SD
+  // Add service to MDNS-SD
   MDNS.addService("http", "tcp", 80);
 }
