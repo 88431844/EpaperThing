@@ -28,4 +28,10 @@
 ### 串口驱动
 - CP210x USB to UART Bridge VCP Drivers ,link: "https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers"
 
-![avatar](https://github.com/88431844/ePaperThing/blob/master/EpaperThingImg.JPG)
+##  坐标系参考
+
+![avatar](img/微雪2.9寸墨水屏坐标系参考.jpg)
+
+## 展示
+
+![avatar](img/EpaperThingImg.JPG)
