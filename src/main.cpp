@@ -14,6 +14,7 @@
 #include "DEV_Config.h"
 #include "EPD.h"
 #include <stdlib.h>
+#include <Button2.h>
 
 // !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/14, /* data=*/13, /* cs=*/15, /* dc=*/4, /* reset=*/2); // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
@@ -29,6 +30,9 @@ ESP8266WebServer esp8266_server(80);
 
 String todo = " 生命不息 折腾不止";
 
+#define BUTTON_PIN 0
+Button2 button = Button2(BUTTON_PIN);
+
 //函数声明
 void handleCLEAR();
 void clearDis();
@@ -41,6 +45,7 @@ void configModeCallback(WiFiManager *myWiFiManager);
 void updateDisplay(String todo);
 String changeWeek(int weekSum);
 String getParam(String name);
+void handler(Button2 &btn);
 
 void setup()
 {
@@ -71,11 +76,16 @@ void setup()
 
   webInit();
   myMDNSinit();
+
+  button.setClickHandler(handler);
+  button.setLongClickHandler(handler);
+  button.setDoubleClickHandler(handler);
+  button.setTripleClickHandler(handler);
 }
 
 void loop()
 {
-
+  button.loop();
   MDNS.update();
   esp8266_server.handleClient(); // 处理http服务器访问
 
@@ -89,7 +99,6 @@ void loop()
       updateDisplay(todo);
     }
   }
-  delay(500);
 }
 
 void configModeCallback(WiFiManager *myWiFiManager)
@@ -316,6 +325,8 @@ void clearDis()
 
   u8g2.begin();
   u8g2.enableUTF8Print();
+
+
 }
 void myMDNSinit()
 {
@@ -335,4 +346,27 @@ void myMDNSinit()
   Serial.println("mDNS responder started");
   // Add service to MDNS-SD
   MDNS.addService("http", "tcp", 80);
+}
+void handler(Button2 &btn)
+{
+  switch (btn.getClickType())
+  {
+  case SINGLE_CLICK:
+    Serial.print("single ");
+    clearDis();
+    break;
+  case DOUBLE_CLICK:
+    Serial.print("double ");
+    break;
+  case TRIPLE_CLICK:
+    Serial.print("triple ");
+    break;
+  case LONG_CLICK:
+    Serial.print("long");
+    break;
+  }
+  Serial.print("click");
+  Serial.print(" (");
+  Serial.print(btn.getNumberOfClicks());
+  Serial.println(")");
 }
