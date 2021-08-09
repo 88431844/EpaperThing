@@ -33,6 +33,11 @@ String todo = " 生命不息 折腾不止";
 #define BUTTON_PIN 0
 Button2 button = Button2(BUTTON_PIN);
 
+//屏幕局部更新次数
+int updateTimes = 0;
+//5分钟全局刷新屏幕一次
+int clearDisMin = 5;
+
 //函数声明
 void handleCLEAR();
 void clearDis();
@@ -127,12 +132,19 @@ void updateDisplay(String todo)
   int hours = hour(localTime); //12 hour format use : hourFormat12(localTime)  isPM()/isAM()
   int thisHour = hours;
 
-  //每隔1小时，刷新一次屏幕
-  if (lastHour != thisHour)
-  {
+  // //每隔1小时，刷新一次屏幕
+  // if (lastHour != thisHour)
+  // {
+  //   clearDis();
+  //   lastHour = thisHour;
+  // }
+  //每隔X分钟全局刷新屏幕
+  updateTimes ++;
+  if(updateTimes == clearDisMin){
     clearDis();
-    lastHour = thisHour;
+    updateTimes = 0;
   }
+
 
   /////process time///////
   String h = "";
