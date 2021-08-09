@@ -11,11 +11,11 @@
 #include <U8g2lib.h>
 #include <ESP8266WebServer.h> //  ESP8266WebServer库·
 #include <ESP8266mDNS.h>
-#include "DEV_Config.h"
-#include "EPD.h"
+#include "epd2in9.h"
 #include <stdlib.h>
 #include <Button2.h>
 
+Epd epd;
 // !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/14, /* data=*/13, /* cs=*/15, /* dc=*/4, /* reset=*/2); // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
 
@@ -101,7 +101,10 @@ void loop()
     {
       previousMinute = minute();
       // Update the display
+        Serial.println("-----------------");
+      Serial.println("updateDisplay start...");
       updateDisplay(todo);
+      Serial.println("updateDisplay end...");
     }
   }
 }
@@ -139,12 +142,13 @@ void updateDisplay(String todo)
   //   lastHour = thisHour;
   // }
   //每隔X分钟全局刷新屏幕
-  updateTimes ++;
-  if(updateTimes == clearDisMin){
+  updateTimes++;
+  if (updateTimes == clearDisMin)
+  {
     clearDis();
+    Serial.println("all display clear !!!");
     updateTimes = 0;
   }
-
 
   /////process time///////
   String h = "";
@@ -199,12 +203,14 @@ void updateDisplay(String todo)
   String myTime = h + ":" + m;
   String myDate = mm + "月" + dd + "日";
   String myWeek = w.substring(0, 3);
-  Serial.println("-----------------");
+
   Serial.println("myTime: " + myTime);
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
 
   //////process display////////
+  u8g2.sleepOff();
+  Serial.println("u8g2.sleepOff().... ");
   u8g2.firstPage();
   do
   {
@@ -224,8 +230,9 @@ void updateDisplay(String todo)
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(142, 117);
     u8g2.print(todo);
-
   } while (u8g2.nextPage());
+  u8g2.sleepOn();
+  Serial.println("u8g2.sleepOn().... ");
 }
 void wifiStatus(String myStatus, bool needClear)
 {
@@ -330,15 +337,12 @@ void returnRoot()
 }
 void clearDis()
 {
-  DEV_Module_Init();
-  EPD_2IN9_Init(EPD_2IN9_FULL);
-  EPD_2IN9_Clear();
-  DEV_Delay_ms(500);
+  epd.Init(lut_full_update);
+
+  delay(500);
 
   u8g2.begin();
   u8g2.enableUTF8Print();
-
-
 }
 void myMDNSinit()
 {
