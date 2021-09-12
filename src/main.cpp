@@ -12,6 +12,7 @@
 #include <ESP8266WebServer.h> //  ESP8266WebServer库·
 #include <ESP8266mDNS.h>
 #include "epd2in9.h"
+#include "EPD_2in9.h"
 #include <stdlib.h>
 #include <Button2.h>
 
@@ -101,7 +102,7 @@ void loop()
     {
       previousMinute = minute();
       // Update the display
-        Serial.println("-----------------");
+      Serial.println("-----------------");
       Serial.println("updateDisplay start...");
       updateDisplay(todo);
       Serial.println("updateDisplay end...");
@@ -337,12 +338,29 @@ void returnRoot()
 }
 void clearDis()
 {
-  epd.Init(lut_full_update);
+  // epd.Init(lut_full_update);
+  // EPD_2IN9_FULL			0
+  // EPD_2IN9_PART			1
+  //   EPD_2IN9_Init(EPD_2IN9_FULL);
+  // EPD_2IN9_Init(EPD_2IN9_PART);
+  // EPD_2IN9_Clear();
+
+  epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
+  epd.DisplayFrame();
+  epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
+  epd.DisplayFrame();
 
   delay(500);
 
-  u8g2.begin();
-  u8g2.enableUTF8Print();
+  // epd.ClearFrameMemory(0x00); // bit set = white, bit reset = black
+  // epd.DisplayFrame();
+  // epd.ClearFrameMemory(0x00); // bit set = white, bit reset = black
+  // epd.DisplayFrame();
+
+  // delay(500);
+
+  // u8g2.begin();
+  // u8g2.enableUTF8Print();
 }
 void myMDNSinit()
 {
