@@ -15,7 +15,8 @@
 #include "EPD_2in9.h"
 #include <stdlib.h>
 #include <Button2.h>
-
+#include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
 Epd epd;
 // !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/14, /* data=*/13, /* cs=*/15, /* dc=*/4, /* reset=*/2); // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
@@ -39,6 +40,10 @@ int updateTimes = 0;
 //5分钟全局刷新屏幕一次
 int clearDisMin = 5;
 
+String cityCode = "101010900";
+//北京丰台区 101010900
+//北京房山区 101011200
+
 //函数声明
 void handleCLEAR();
 void clearDis();
@@ -52,62 +57,69 @@ void updateDisplay(String todo);
 String changeWeek(int weekSum);
 String getParam(String name);
 void handler(Button2 &btn);
+void getCityCode();
+void getCityWeater();
+void weaterData(String *cityDZ, String *dataSK, String *dataFC);
 
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  u8g2.begin();
-  u8g2.enableUTF8Print();
-  wifiStatus("WiFi连接中...", true);
+  // u8g2.begin();
+  // u8g2.enableUTF8Print();
+  // wifiStatus("WiFi连接中...", true);
 
-  WiFiManager wifiManager;
+  // WiFiManager wifiManager;
 
-  wifiManager.setAPCallback(configModeCallback);
-  if (!wifiManager.autoConnect("EPaperThing"))
-  {
-    Serial.println("failed to connect and hit timeout");
-    //reset and try again, or maybe put it to deep sleep
-    ESP.reset();
-    delay(1000);
-  }
+  // wifiManager.setAPCallback(configModeCallback);
+  // if (!wifiManager.autoConnect("EPaperThing"))
+  // {
+  //   Serial.println("failed to connect and hit timeout");
+  //   //reset and try again, or maybe put it to deep sleep
+  //   ESP.reset();
+  //   delay(1000);
+  // }
 
-  //if you get here you have connected to the WiFi
-  Serial.println("connected...");
+  // //if you get here you have connected to the WiFi
+  // Serial.println("connected...");
 
-  wifiStatus("WiFi连接成功！！！", true);
+  // wifiStatus("WiFi连接成功！！！", true);
 
-  initNTP();
+  // initNTP();
 
-  webInit();
-  myMDNSinit();
+  // webInit();
+  // myMDNSinit();
 
-  button.setClickHandler(handler);
-  button.setLongClickHandler(handler);
-  button.setDoubleClickHandler(handler);
-  button.setTripleClickHandler(handler);
+  // button.setClickHandler(handler);
+  // button.setLongClickHandler(handler);
+  // button.setDoubleClickHandler(handler);
+  // button.setTripleClickHandler(handler);
+
+  
 }
 
 void loop()
 {
-  button.loop();
-  MDNS.update();
-  esp8266_server.handleClient(); // 处理http服务器访问
+  delay(5000);
+  getCityWeater();
+  // button.loop();
+  // MDNS.update();
+  // esp8266_server.handleClient(); // 处理http服务器访问
 
-  //  Update the display only if time has changed
-  if (timeStatus() != timeNotSet)
-  {
-    if (minute() != previousMinute)
-    {
-      previousMinute = minute();
-      // Update the display
-      Serial.println("-----------------");
-      Serial.println("updateDisplay start...");
-      updateDisplay(todo);
-      Serial.println("updateDisplay end...");
-    }
-  }
+  // //  Update the display only if time has changed
+  // if (timeStatus() != timeNotSet)
+  // {
+  //   if (minute() != previousMinute)
+  //   {
+  //     previousMinute = minute();
+  //     // Update the display
+  //     Serial.println("-----------------");
+  //     Serial.println("updateDisplay start...");
+  //     updateDisplay(todo);
+  //     Serial.println("updateDisplay end...");
+  //   }
+  // }
 }
 
 void configModeCallback(WiFiManager *myWiFiManager)
@@ -403,4 +415,156 @@ void handler(Button2 &btn)
   Serial.print(" (");
   Serial.print(btn.getNumberOfClicks());
   Serial.println(")");
+}
+// 发送HTTP请求并且将服务器响应通过串口输出
+void getCityCode()
+{
+  String URL = "http://wgeo.weather.com.cn/ip/?_=" + String(now());
+  //创建 HTTPClient 对象
+  HTTPClient httpClient;
+
+  //配置请求地址。此处也可以不使用端口号和PATH而单纯的
+  httpClient.begin(URL);
+
+  //设置请求头中的User-Agent
+  httpClient.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+  httpClient.addHeader("Referer", "http://www.weather.com.cn/");
+
+  //启动连接并发送HTTP请求
+  int httpCode = httpClient.GET();
+  Serial.print("Send GET request to URL: ");
+  Serial.println(URL);
+
+  //如果服务器响应OK则从服务器获取响应体信息并通过串口输出
+  if (httpCode == HTTP_CODE_OK)
+  {
+    String str = httpClient.getString();
+
+    int aa = str.indexOf("id=");
+    if (aa > -1)
+    {
+      //cityCode = str.substring(aa+4,aa+4+9).toInt();
+      cityCode = str.substring(aa + 4, aa + 4 + 9);
+      Serial.println(cityCode);
+      getCityWeater();
+    }
+    else
+    {
+      Serial.println("获取城市代码失败");
+    }
+  }
+  else
+  {
+    Serial.println("请求城市代码错误：");
+    Serial.println(httpCode);
+  }
+
+  //关闭ESP8266与服务器连接
+  httpClient.end();
+}
+
+// 获取城市天气
+void getCityWeater()
+{
+  String URL = "http://d1.weather.com.cn/weather_index/" + cityCode + ".html?_=" + String(now());
+  //创建 HTTPClient 对象
+  HTTPClient httpClient;
+
+  httpClient.begin(URL);
+
+  //设置请求头中的User-Agent
+  httpClient.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+  httpClient.addHeader("Referer", "http://www.weather.com.cn/");
+
+  //启动连接并发送HTTP请求
+  int httpCode = httpClient.GET();
+  Serial.println("正在获取天气数据");
+  Serial.println(URL);
+
+  //如果服务器响应OK则从服务器获取响应体信息并通过串口输出
+  if (httpCode == HTTP_CODE_OK)
+  {
+
+    String str = httpClient.getString();
+    int indexStart = str.indexOf("weatherinfo\":");
+    int indexEnd = str.indexOf("};var alarmDZ");
+
+    String jsonCityDZ = str.substring(indexStart + 13, indexEnd);
+    Serial.println(jsonCityDZ);
+
+    indexStart = str.indexOf("dataSK =");
+    indexEnd = str.indexOf(";var dataZS");
+    String jsonDataSK = str.substring(indexStart + 8, indexEnd);
+    Serial.println(jsonDataSK);
+
+    indexStart = str.indexOf("\"f\":[");
+    indexEnd = str.indexOf(",{\"fa");
+    String jsonFC = str.substring(indexStart + 5, indexEnd);
+    Serial.println(jsonFC);
+
+    weaterData(&jsonCityDZ,&jsonDataSK,&jsonFC);
+    Serial.println("获取成功");
+  }
+  else
+  {
+    Serial.println("请求城市天气错误：");
+    Serial.print(httpCode);
+  }
+
+  //关闭ESP8266与服务器连接
+  httpClient.end();
+}
+void weaterData(String *cityDZ, String *dataSK, String *dataFC)
+{
+
+  DynamicJsonDocument doc(512);
+  deserializeJson(doc, *dataSK);
+  JsonObject sk = doc.as<JsonObject>();
+
+  String temp = sk["temp"].as<String>();
+  Serial.println("温度：" + temp);
+  String cityname = sk["cityname"].as<String>();
+  Serial.println("城市名称：" + cityname);
+
+  //PM2.5空气指数
+  String aqiTxt = "优";
+  int pm25V = sk["aqi"];
+  if (pm25V > 200)
+  {
+    aqiTxt = "重度";
+  }
+  else if (pm25V > 150)
+  {
+    aqiTxt = "中度";
+  }
+  else if (pm25V > 100)
+  {
+    aqiTxt = "轻度";
+  }
+  else if (pm25V > 50)
+  {
+    aqiTxt = "良";
+  }
+  Serial.println("PM2.5空气指数：" + aqiTxt);
+
+  //湿度
+  String SD = sk["SD"].as<String>();
+  Serial.println("湿度：" + SD);
+  //实时天气
+  String realTemp = sk["weather"].as<String>();
+  Serial.println("实时温度：" + realTemp);
+  String windyStatus = sk["WD"].as<String>() + sk["WS"].as<String>();
+  Serial.println("风向：" + windyStatus);
+
+deserializeJson(doc, *cityDZ);
+  JsonObject dz = doc.as<JsonObject>();
+  String todayWeather = dz["weather"].as<String>();
+  Serial.println("今日天气：" + todayWeather);
+
+  deserializeJson(doc, *dataFC);
+  JsonObject fc = doc.as<JsonObject>();
+  String lowTemp = fc["fd"].as<String>();
+  Serial.println("最低温度：" + lowTemp);
+  String highTemp = fc["fc"].as<String>();
+  Serial.println("最高温度：" + highTemp);
 }
