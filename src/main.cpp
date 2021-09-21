@@ -17,6 +17,9 @@
 #include <Button2.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 Epd epd;
 // !!!!!!!!!!! /Arduino/libraries/U8g2/src/clib/u8g2.h 去掉 #define U8G2_16BIT 注释，让2.9寸墨水屏显示区域变大成整屏
 U8G2_IL3820_V2_296X128_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/14, /* data=*/13, /* cs=*/15, /* dc=*/4, /* reset=*/2); // ePaper Display, lesser flickering and faster speed, enable 16 bit mode for this display!
@@ -44,6 +47,20 @@ String cityCode = "101010900";
 //北京丰台区 101010900
 //北京房山区 101011200
 
+// Data wire is plugged into port 2 on the Arduino
+#define ONE_WIRE_BUS 12
+
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature.
+DallasTemperature sensors(&oneWire);
+
+// arrays to hold device address
+DeviceAddress insideThermometer;
+
+String ds18b20Temp = "0.0";
+
 //函数声明
 void handleCLEAR();
 void clearDis();
@@ -60,6 +77,9 @@ void handler(Button2 &btn);
 void getCityCode();
 void getCityWeater();
 void weaterData(String *cityDZ, String *dataSK, String *dataFC);
+void printTemperature(DeviceAddress deviceAddress);
+void printAddress(DeviceAddress deviceAddress);
+void getTemp();
 
 void setup()
 {
@@ -96,13 +116,40 @@ void setup()
   // button.setDoubleClickHandler(handler);
   // button.setTripleClickHandler(handler);
 
-  
+  // locate devices on the bus
+  Serial.print("Locating devices...");
+  sensors.begin();
+  Serial.print("Found ");
+  Serial.print(sensors.getDeviceCount(), DEC);
+  Serial.println(" devices.");
+
+  // report parasite power requirements
+  Serial.print("Parasite power is: ");
+  if (sensors.isParasitePowerMode())
+    Serial.println("ON");
+  else
+    Serial.println("OFF");
+  if (!sensors.getAddress(insideThermometer, 0))
+    Serial.println("Unable to find address for Device 0");
+  // show the addresses we found on the bus
+  Serial.print("Device 0 Address: ");
+  printAddress(insideThermometer);
+  Serial.println();
+
+  // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
+  sensors.setResolution(insideThermometer, 9);
+
+  Serial.print("Device 0 Resolution: ");
+  Serial.print(sensors.getResolution(insideThermometer), DEC);
+  Serial.println();
 }
 
 void loop()
 {
   delay(5000);
   getCityWeater();
+
+  getTemp();
   // button.loop();
   // MDNS.update();
   // esp8266_server.handleClient(); // 处理http服务器访问
@@ -502,7 +549,7 @@ void getCityWeater()
     String jsonFC = str.substring(indexStart + 5, indexEnd);
     Serial.println(jsonFC);
 
-    weaterData(&jsonCityDZ,&jsonDataSK,&jsonFC);
+    weaterData(&jsonCityDZ, &jsonDataSK, &jsonFC);
     Serial.println("获取成功");
   }
   else
@@ -556,7 +603,7 @@ void weaterData(String *cityDZ, String *dataSK, String *dataFC)
   String windyStatus = sk["WD"].as<String>() + sk["WS"].as<String>();
   Serial.println("风向：" + windyStatus);
 
-deserializeJson(doc, *cityDZ);
+  deserializeJson(doc, *cityDZ);
   JsonObject dz = doc.as<JsonObject>();
   String todayWeather = dz["weather"].as<String>();
   Serial.println("今日天气：" + todayWeather);
@@ -567,4 +614,44 @@ deserializeJson(doc, *cityDZ);
   Serial.println("最低温度：" + lowTemp);
   String highTemp = fc["fc"].as<String>();
   Serial.println("最高温度：" + highTemp);
+}
+// function to print the temperature for a device
+void printTemperature(DeviceAddress deviceAddress)
+{
+  // method 1 - slower
+  //Serial.print("Temp C: ");
+  //Serial.print(sensors.getTempC(deviceAddress));
+  //Serial.print(" Temp F: ");
+  //Serial.print(sensors.getTempF(deviceAddress)); // Makes a second call to getTempC and then converts to Fahrenheit
+
+  // method 2 - faster
+  float tempC = sensors.getTempC(deviceAddress);
+  if (tempC == DEVICE_DISCONNECTED_C)
+  {
+    Serial.println("Error: Could not read temperature data");
+    return;
+  }
+  Serial.print("Temp C: ");
+  ds18b20Temp = String(tempC);
+  Serial.print(ds18b20Temp);
+}
+// function to print a device address
+void printAddress(DeviceAddress deviceAddress)
+{
+  for (uint8_t i = 0; i < 8; i++)
+  {
+    if (deviceAddress[i] < 16)
+      Serial.print("0");
+    Serial.print(deviceAddress[i], HEX);
+  }
+}
+void getTemp()
+{
+  // request to all devices on the bus
+  Serial.print("Requesting temperatures...");
+  sensors.requestTemperatures(); // Send the command to get temperatures
+  Serial.println("DONE");
+
+  // It responds almost immediately. Let's print out the data
+  printTemperature(insideThermometer); // Use a simple function to print out the data
 }
