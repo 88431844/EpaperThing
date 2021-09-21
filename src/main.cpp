@@ -86,87 +86,88 @@ void setup()
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  // u8g2.begin();
-  // u8g2.enableUTF8Print();
-  // wifiStatus("WiFi连接中...", true);
+  u8g2.begin();
+  u8g2.enableUTF8Print();
+  wifiStatus("WiFi连接中...", true);
 
-  // WiFiManager wifiManager;
+  WiFiManager wifiManager;
 
-  // wifiManager.setAPCallback(configModeCallback);
-  // if (!wifiManager.autoConnect("EPaperThing"))
-  // {
-  //   Serial.println("failed to connect and hit timeout");
-  //   //reset and try again, or maybe put it to deep sleep
-  //   ESP.reset();
-  //   delay(1000);
-  // }
+  wifiManager.setAPCallback(configModeCallback);
+  if (!wifiManager.autoConnect("EPaperThing"))
+  {
+    Serial.println("failed to connect and hit timeout");
+    //reset and try again, or maybe put it to deep sleep
+    ESP.reset();
+    delay(1000);
+  }
 
-  // //if you get here you have connected to the WiFi
-  // Serial.println("connected...");
+  //if you get here you have connected to the WiFi
+  Serial.println("connected...");
 
-  // wifiStatus("WiFi连接成功！！！", true);
+  wifiStatus("WiFi连接成功！！！", true);
 
-  // initNTP();
+  initNTP();
 
-  // webInit();
-  // myMDNSinit();
+  webInit();
+  myMDNSinit();
 
-  // button.setClickHandler(handler);
-  // button.setLongClickHandler(handler);
-  // button.setDoubleClickHandler(handler);
-  // button.setTripleClickHandler(handler);
+  button.setClickHandler(handler);
+  button.setLongClickHandler(handler);
+  button.setDoubleClickHandler(handler);
+  button.setTripleClickHandler(handler);
 
-  // locate devices on the bus
-  Serial.print("Locating devices...");
-  sensors.begin();
-  Serial.print("Found ");
-  Serial.print(sensors.getDeviceCount(), DEC);
-  Serial.println(" devices.");
+  // // locate devices on the bus
+  // Serial.print("Locating devices...");
+  // sensors.begin();
+  // Serial.print("Found ");
+  // Serial.print(sensors.getDeviceCount(), DEC);
+  // Serial.println(" devices.");
 
-  // report parasite power requirements
-  Serial.print("Parasite power is: ");
-  if (sensors.isParasitePowerMode())
-    Serial.println("ON");
-  else
-    Serial.println("OFF");
-  if (!sensors.getAddress(insideThermometer, 0))
-    Serial.println("Unable to find address for Device 0");
-  // show the addresses we found on the bus
-  Serial.print("Device 0 Address: ");
-  printAddress(insideThermometer);
-  Serial.println();
+  // // report parasite power requirements
+  // Serial.print("Parasite power is: ");
+  // if (sensors.isParasitePowerMode())
+  //   Serial.println("ON");
+  // else
+  //   Serial.println("OFF");
+  // if (!sensors.getAddress(insideThermometer, 0))
+  //   Serial.println("Unable to find address for Device 0");
+  // // show the addresses we found on the bus
+  // Serial.print("Device 0 Address: ");
+  // printAddress(insideThermometer);
+  // Serial.println();
 
-  // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
-  sensors.setResolution(insideThermometer, 9);
+  // // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
+  // sensors.setResolution(insideThermometer, 9);
 
-  Serial.print("Device 0 Resolution: ");
-  Serial.print(sensors.getResolution(insideThermometer), DEC);
-  Serial.println();
+  // Serial.print("Device 0 Resolution: ");
+  // Serial.print(sensors.getResolution(insideThermometer), DEC);
+  // Serial.println();
 }
 
 void loop()
 {
-  delay(5000);
-  getCityWeater();
+  // delay(5000);
+  // getCityWeater();
 
-  getTemp();
-  // button.loop();
-  // MDNS.update();
-  // esp8266_server.handleClient(); // 处理http服务器访问
+  // getTemp();
 
-  // //  Update the display only if time has changed
-  // if (timeStatus() != timeNotSet)
-  // {
-  //   if (minute() != previousMinute)
-  //   {
-  //     previousMinute = minute();
-  //     // Update the display
-  //     Serial.println("-----------------");
-  //     Serial.println("updateDisplay start...");
-  //     updateDisplay(todo);
-  //     Serial.println("updateDisplay end...");
-  //   }
-  // }
+  button.loop();
+  MDNS.update();
+  esp8266_server.handleClient(); // 处理http服务器访问
+
+  //  Update the display only if time has changed
+  if (timeStatus() != timeNotSet)
+  {
+    if (minute() != previousMinute)
+    {
+      previousMinute = minute();
+      // Update the display
+      Serial.println("-----------------");
+      Serial.println("updateDisplay start...");
+      updateDisplay(todo);
+      Serial.println("updateDisplay end...");
+    }
+  }
 }
 
 void configModeCallback(WiFiManager *myWiFiManager)
@@ -279,6 +280,11 @@ void updateDisplay(String todo)
     char __myTime[sizeof(myTime)];
     myTime.toCharArray(__myTime, sizeof(__myTime));
     u8g2.drawStr(5, 95, __myTime);
+
+    // u8g2.drawFrame(0, 96, 294, 30);
+    // u8g2.drawLine(141, 96, 141, 126);
+    // u8g2.drawLine(64, 96, 64, 126);
+    // u8g2.drawLine(98, 96, 98, 126);
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(2, 117);
@@ -570,8 +576,6 @@ void weaterData(String *cityDZ, String *dataSK, String *dataFC)
 
   String temp = sk["temp"].as<String>();
   Serial.println("温度：" + temp);
-  String cityname = sk["cityname"].as<String>();
-  Serial.println("城市名称：" + cityname);
 
   //PM2.5空气指数
   String aqiTxt = "优";
@@ -594,19 +598,9 @@ void weaterData(String *cityDZ, String *dataSK, String *dataFC)
   }
   Serial.println("PM2.5空气指数：" + aqiTxt);
 
-  //湿度
-  String SD = sk["SD"].as<String>();
-  Serial.println("湿度：" + SD);
   //实时天气
-  String realTemp = sk["weather"].as<String>();
-  Serial.println("实时温度：" + realTemp);
-  String windyStatus = sk["WD"].as<String>() + sk["WS"].as<String>();
-  Serial.println("风向：" + windyStatus);
-
-  deserializeJson(doc, *cityDZ);
-  JsonObject dz = doc.as<JsonObject>();
-  String todayWeather = dz["weather"].as<String>();
-  Serial.println("今日天气：" + todayWeather);
+  String realWeather = sk["weather"].as<String>();
+  Serial.println("实时天气：" + realWeather);
 
   deserializeJson(doc, *dataFC);
   JsonObject fc = doc.as<JsonObject>();
