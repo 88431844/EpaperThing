@@ -61,6 +61,10 @@ DeviceAddress insideThermometer;
 
 String ds18b20Temp = "0.0";
 
+//Todoist 配置
+String projectId;
+String authorization;
+
 //函数声明
 void handleCLEAR();
 void clearDis();
@@ -350,7 +354,7 @@ String changeWeek(int weekSum)
 
 void handleRoot()
 { //处理网站根目录“/”的访问请求
-  String content = "<!DOCTYPE html><html lang='zh-CN'><head><meta charset='UTF-8'></head><body><center><form action='TODO 'method='POST'><br>提醒事项：<input type='text'name='todo'value=''><br><br><br><input type='submit'value='更新提醒事项'></form><form action='CLEAR 'method='POST'><br><br><input type='submit'value='清屏'></form></center></body></html>";
+  String content = "<!DOCTYPE html><html lang='zh-CN'><head><meta charset='UTF-8'/></head><body><center><form action='TODO'method='POST'><br/>提醒事项：<input type='text'name='todo'value=''/><br/><br/><br/><input type='submit'value='更新提醒事项'/></form><form action='CLEAR'method='POST'><br/><br/><input type='submit'value='清屏'/></form><form action='TODOIST'method='POST'><br/><br/>项目ID：<input type='text'name='projectId'value=''/><br/>authorization：<input type='text'name='authorization'value=''/><input type='submit'value='提交'/></form></center></body></html>";
   esp8266_server.send(200, "text/html", content); // NodeMCU将调用此函数。访问成功返回200状态码，返回信息类型text/html
 }
 
@@ -372,6 +376,14 @@ void handleCLEAR()
   returnRoot();
   updateDisplay(todo);
 }
+void handleTODOIST()
+{
+  projectId = getParam("projectId");
+  authorization = getParam("authorization");
+  Serial.println("handleTODOIST projectId: " + projectId);
+  Serial.println("handleTODOIST authorization: " + authorization);
+  handleCLEAR();
+}
 String getParam(String name)
 {
   //read parameter from server, for customhmtl input
@@ -388,10 +400,12 @@ void webInit()
 
   //--------"启动网络服务功能"程序部分开始--------
   esp8266_server.begin();
-  esp8266_server.on("/", HTTP_GET, handleRoot);        //访问网站的根目录 处理GET请求 执行handleRoot函数
-  esp8266_server.on("/TODO", HTTP_POST, handleTODO);   //设置处理墨水屏提醒文字请求函数  处理POST请求
-  esp8266_server.on("/CLEAR", HTTP_POST, handleCLEAR); //设置处理墨水屏清理请求函数  处理POST请求
-  esp8266_server.onNotFound(handleNotFound);           //当请求服务器找不到时，执行handleNotFound函数
+  esp8266_server.on("/", HTTP_GET, handleRoot);            //访问网站的根目录 处理GET请求 执行handleRoot函数
+  esp8266_server.on("/TODO", HTTP_POST, handleTODO);       //设置处理墨水屏提醒文字请求函数  处理POST请求
+  esp8266_server.on("/CLEAR", HTTP_POST, handleCLEAR);     //设置处理墨水屏清理请求函数  处理POST请求
+  esp8266_server.on("/TODOIST", HTTP_POST, handleTODOIST); //设置todoist的项目ID和authorization  处理POST请求
+
+  esp8266_server.onNotFound(handleNotFound); //当请求服务器找不到时，执行handleNotFound函数
   //--------"启动网络服务功能"程序部分结束--------
   Serial.println("HTTP esp8266_server started"); //  告知用户ESP8266网络服务功能已经启动
 }
