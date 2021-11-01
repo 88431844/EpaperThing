@@ -303,6 +303,8 @@ void updateDisplay(String todo)
   } while (u8g2.nextPage());
   u8g2.sleepOn();
   Serial.println("u8g2.sleepOn().... ");
+
+  getCityWeater();
 }
 void wifiStatus(String myStatus, bool needClear)
 {
@@ -533,15 +535,12 @@ void getCityCode()
 // 获取城市天气
 void getCityWeater()
 {
-  String URL = "http://d1.weather.com.cn/weather_index/" + cityCode + ".html?_=" + String(now());
+
+  String URL = "http://restapi.amap.com/v3/weather/weatherInfo?city=130606&key=";
   //创建 HTTPClient 对象
   HTTPClient httpClient;
 
   httpClient.begin(URL);
-
-  //设置请求头中的User-Agent
-  httpClient.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
-  httpClient.addHeader("Referer", "http://www.weather.com.cn/");
 
   //启动连接并发送HTTP请求
   int httpCode = httpClient.GET();
@@ -553,23 +552,7 @@ void getCityWeater()
   {
 
     String str = httpClient.getString();
-    int indexStart = str.indexOf("weatherinfo\":");
-    int indexEnd = str.indexOf("};var alarmDZ");
-
-    String jsonCityDZ = str.substring(indexStart + 13, indexEnd);
-    Serial.println(jsonCityDZ);
-
-    indexStart = str.indexOf("dataSK =");
-    indexEnd = str.indexOf(";var dataZS");
-    String jsonDataSK = str.substring(indexStart + 8, indexEnd);
-    Serial.println(jsonDataSK);
-
-    indexStart = str.indexOf("\"f\":[");
-    indexEnd = str.indexOf(",{\"fa");
-    String jsonFC = str.substring(indexStart + 5, indexEnd);
-    Serial.println(jsonFC);
-
-    weaterData(&jsonCityDZ, &jsonDataSK, &jsonFC);
+    Serial.println("ret:" + str);
     Serial.println("获取成功");
   }
   else
@@ -580,6 +563,53 @@ void getCityWeater()
 
   //关闭ESP8266与服务器连接
   httpClient.end();
+  // String URL = "http://d1.weather.com.cn/weather_index/" + cityCode + ".html?_=" + String(now());
+  // //创建 HTTPClient 对象
+  // HTTPClient httpClient;
+
+  // httpClient.begin(URL);
+
+  // //设置请求头中的User-Agent
+  // httpClient.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+  // httpClient.addHeader("Referer", "http://www.weather.com.cn/");
+
+  // //启动连接并发送HTTP请求
+  // int httpCode = httpClient.GET();
+  // Serial.println("正在获取天气数据");
+  // Serial.println(URL);
+
+  // //如果服务器响应OK则从服务器获取响应体信息并通过串口输出
+  // if (httpCode == HTTP_CODE_OK)
+  // {
+
+  //   String str = httpClient.getString();
+  //   int indexStart = str.indexOf("weatherinfo\":");
+  //   int indexEnd = str.indexOf("};var alarmDZ");
+
+  //   String jsonCityDZ = str.substring(indexStart + 13, indexEnd);
+  //   Serial.println(jsonCityDZ);
+
+  //   indexStart = str.indexOf("dataSK =");
+  //   indexEnd = str.indexOf(";var dataZS");
+  //   String jsonDataSK = str.substring(indexStart + 8, indexEnd);
+  //   Serial.println(jsonDataSK);
+
+  //   indexStart = str.indexOf("\"f\":[");
+  //   indexEnd = str.indexOf(",{\"fa");
+  //   String jsonFC = str.substring(indexStart + 5, indexEnd);
+  //   Serial.println(jsonFC);
+
+  //   weaterData(&jsonCityDZ, &jsonDataSK, &jsonFC);
+  //   Serial.println("获取成功");
+  // }
+  // else
+  // {
+  //   Serial.println("请求城市天气错误：");
+  //   Serial.print(httpCode);
+  // }
+
+  // //关闭ESP8266与服务器连接
+  // httpClient.end();
 }
 void weaterData(String *cityDZ, String *dataSK, String *dataFC)
 {
