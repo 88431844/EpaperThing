@@ -35,7 +35,7 @@ Button2 button = Button2(BUTTON_PIN);
 //屏幕局部更新次数
 int updateTimes = 0;
 //5分钟全局刷新屏幕一次
-int clearDisMin = 5;
+int clearDisMin = 10;
 
 //Todoist 配置
 String projectId;
@@ -43,6 +43,8 @@ String authorization;
 
 //电池使用时间 单位：分钟
 int batLife = 0;
+
+const int sleeptime = 60; //updating interval 71min maximum
 
 //函数声明
 void handleCLEAR();
@@ -53,7 +55,7 @@ void myMDNSinit();
 void returnWebRoot();
 void wifiStatus(String myStatus, bool needClear);
 void configModeCallback(WiFiManager *myWiFiManager);
-void updateDisplay(String todo);
+void updateDisplay();
 String changeWeek(int weekSum);
 String getWebParam(String name);
 void buttonHandler(Button2 &btn);
@@ -93,10 +95,16 @@ void setup()
   button.setLongClickHandler(buttonHandler);
   button.setDoubleClickHandler(buttonHandler);
   button.setTripleClickHandler(buttonHandler);
+
+  // updateDisplay();
+
+  // u8g2.sleepOff();
+  // ESP.deepSleep(60e6);
 }
 
 void loop()
 {
+
   button.loop();
   MDNS.update();
   esp8266_server.handleClient(); // 处理http服务器访问
@@ -110,7 +118,12 @@ void loop()
       // Update the display
       Serial.println("-----------------");
       Serial.println("updateDisplay start...");
-      updateDisplay(todo);
+
+      delay(1);
+      //Insert code to connect to WiFi, start your servers or clients or whatever
+      updateDisplay();
+
+      delay(1); //For some reason the modem won't go to sleep unless you do a delay
       Serial.println("updateDisplay end...");
     }
   }
@@ -121,7 +134,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
   wifiStatus("请检查WiFi连接后重启", false);
 }
 
-void updateDisplay(String todo)
+void updateDisplay()
 {
 
   TimeChangeRule *tcr; // Pointer to the time change rule
@@ -149,6 +162,10 @@ void updateDisplay(String todo)
     clearDis();
     Serial.println("all display clear !!!");
     updateTimes = 0;
+
+    WiFi.forceSleepWake();
+    WiFi.getAutoConnect();
+    Serial.println("WiFi.forceSleepWake() " + WiFi.getSleepMode());
   }
 
   /////process time///////
@@ -237,6 +254,10 @@ void updateDisplay(String todo)
   u8g2.sleepOn();
   Serial.println("u8g2.sleepOn().... ");
   batLife++;
+
+  WiFi.disconnect();
+  WiFi.forceSleepBegin();
+  Serial.println("WiFi.forceSleepBegin() " + WiFi.getSleepMode());
 }
 void wifiStatus(String myStatus, bool needClear)
 {
@@ -308,7 +329,7 @@ void handleCLEAR()
 {
   clearDis();
   returnWebRoot();
-  updateDisplay(todo);
+  updateDisplay();
 }
 void handleTODOIST()
 {
