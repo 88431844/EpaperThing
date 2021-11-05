@@ -44,7 +44,8 @@ String authorization;
 //电池使用时间 单位：分钟
 int batLife = 0;
 
-const int sleeptime = 60; //updating interval 71min maximum
+//当前小时 用于判断是否连接WiFi
+int currentHour = 0;
 
 //函数声明
 void handleCLEAR();
@@ -153,7 +154,20 @@ void updateDisplay()
   int seconds = second(localTime);
   int minutes = minute(localTime);
   int hours = hour(localTime); //12 hour format use : hourFormat12(localTime)  isPM()/isAM()
-  int thisHour = hours;
+
+  if (hours != currentHour)
+  {
+    WiFi.forceSleepWake();
+    WiFi.getAutoConnect();
+    Serial.println("WiFi.forceSleepWake() " + WiFi.getSleepMode());
+    currentHour = hours;
+  }
+
+  //凌晨零点到六点 esp8266 周期深度休眠一小时
+  if (hours > 0 && hours <= 6)
+  {
+    ESP.deepSleep(minutes * 60 * 1000000, WAKE_NO_RFCAL); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
+  }
 
   //每隔X分钟全局刷新屏幕
   updateTimes++;
@@ -162,10 +176,6 @@ void updateDisplay()
     clearDis();
     Serial.println("all display clear !!!");
     updateTimes = 0;
-
-    WiFi.forceSleepWake();
-    WiFi.getAutoConnect();
-    Serial.println("WiFi.forceSleepWake() " + WiFi.getSleepMode());
   }
 
   /////process time///////
@@ -255,6 +265,7 @@ void updateDisplay()
   Serial.println("u8g2.sleepOn().... ");
   batLife++;
 
+  //关闭网络连接
   WiFi.disconnect();
   WiFi.forceSleepBegin();
   Serial.println("WiFi.forceSleepBegin() " + WiFi.getSleepMode());
