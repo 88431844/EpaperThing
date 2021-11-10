@@ -34,8 +34,8 @@ Button2 button = Button2(BUTTON_PIN);
 
 //屏幕局部更新次数
 int updateTimes = 0;
-//5分钟全局刷新屏幕一次
-int clearDisMin = 10;
+//几分钟全局刷新屏幕一次
+int clearDisMin = 3;
 
 //Todoist 配置
 String projectId;
@@ -46,6 +46,9 @@ int batLife = 0;
 
 //当前小时 用于判断是否连接WiFi
 int currentHour = 0;
+
+//esp8266深度睡眠时间
+int deepSleepMin = 60;
 
 //函数声明
 void handleCLEAR();
@@ -69,7 +72,7 @@ void setup()
 
   u8g2.begin();
   u8g2.enableUTF8Print();
-  wifiStatus("WiFi连接中...", true);
+  wifiStatus("WiFi连接中...", false);
 
   WiFiManager wifiManager;
 
@@ -85,6 +88,7 @@ void setup()
   //if you get here you have connected to the WiFi
   Serial.println("connected...");
 
+  clearDis();
   wifiStatus("WiFi连接成功！！！", true);
 
   initNTP();
@@ -96,11 +100,6 @@ void setup()
   button.setLongClickHandler(buttonHandler);
   button.setDoubleClickHandler(buttonHandler);
   button.setTripleClickHandler(buttonHandler);
-
-  // updateDisplay();
-
-  // u8g2.sleepOff();
-  // ESP.deepSleep(60e6);
 }
 
 void loop()
@@ -161,12 +160,6 @@ void updateDisplay()
     WiFi.getAutoConnect();
     Serial.println("WiFi.forceSleepWake() " + WiFi.getSleepMode());
     currentHour = hours;
-  }
-
-  //凌晨零点到六点 esp8266 周期深度休眠一小时
-  if (hours > 0 && hours <= 6)
-  {
-    ESP.deepSleep(minutes * 60 * 1000000, WAKE_NO_RFCAL); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
   }
 
   //每隔X分钟全局刷新屏幕
@@ -236,6 +229,17 @@ void updateDisplay()
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
 
+
+    //凌晨零点到六点 esp8266 周期深度休眠一小时
+  if (hours > 0 && hours <= 6)
+  {
+    u8g2.sleepOff();
+    clearDis();
+    wifiStatus(myTime+"开始，睡眠"+deepSleepMin+"分钟...", false);
+    u8g2.sleepOn();
+    ESP.deepSleep(deepSleepMin * 60 * 1000000, WAKE_NO_RFCAL); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
+  }
+
   //////process display////////
   u8g2.sleepOff();
   Serial.println("u8g2.sleepOff().... ");
@@ -258,7 +262,7 @@ void updateDisplay()
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(142, 117);
     // u8g2.print(String(todo));
-    u8g2.print(String(batLife));
+    u8g2.print("时间:"+String(batLife) + " 电压:"+String(analogRead(A0)));
 
   } while (u8g2.nextPage());
   u8g2.sleepOn();
