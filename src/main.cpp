@@ -48,7 +48,7 @@ int batLife = 0;
 int currentHour = 0;
 
 //esp8266深度睡眠时间
-int deepSleepMin = 60;
+int deepSleepMin = 30;
 
 //函数声明
 void handleCLEAR();
@@ -231,7 +231,8 @@ void updateDisplay()
 
 
     //凌晨零点到六点 esp8266 周期深度休眠一小时
-  if (hours > 0 && hours <= 6)
+  if (hours >= 0 && hours <= 6)
+    // if (minutes >= 0 && minutes <= 59)
   {
     u8g2.sleepOff();
     clearDis();
