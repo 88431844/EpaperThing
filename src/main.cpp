@@ -50,6 +50,13 @@ int currentHour = 0;
 //esp8266深度睡眠时间
 int deepSleepMin = 30;
 
+//定义电池检测开关
+#define bat_switch_pin 12
+//锂电池电压
+float batVcc;
+//电池检测引脚
+#define bat_vcc_pin A0
+
 //函数声明
 void handleCLEAR();
 void clearDis();
@@ -238,7 +245,8 @@ void updateDisplay()
     clearDis();
     wifiStatus(myTime+"开始，睡眠"+deepSleepMin+"分钟...", false);
     u8g2.sleepOn();
-    ESP.deepSleep(deepSleepMin * 60 * 1000000, WAKE_NO_RFCAL); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
+    // ESP.deepSleep(deepSleepMin * 60 * 1000000, WAKE_NO_RFCAL); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
+    ESP.deepSleep(deepSleepMin * 60 * 1000000); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
   }
 
   //////process display////////
@@ -263,7 +271,8 @@ void updateDisplay()
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
     u8g2.setCursor(142, 117);
     // u8g2.print(String(todo));
-    u8g2.print("时间:"+String(batLife) + " 电压:"+String(analogRead(A0)));
+    getBatNow();
+    u8g2.print("时间:"+String(batLife) + " 电压:"+String(batVcc));
 
   } while (u8g2.nextPage());
   u8g2.sleepOn();
@@ -465,4 +474,18 @@ void getCityWeater()
 
   //关闭ESP8266与服务器连接
   httpClient.end();
+}
+void getBatNow(){
+    pinMode(bat_switch_pin, OUTPUT);
+  digitalWrite(bat_switch_pin, 1);
+  delay(1);
+  float vcc_cache = 0.0;
+  for (uint8_t i = 0; i < 20; i++)
+  {
+    //delay(1);
+    vcc_cache += analogRead(bat_vcc_pin) * 0.0009765625 * 5.537;
+  }
+  digitalWrite(bat_switch_pin, 0); //关闭电池测量
+  pinMode(bat_switch_pin, INPUT);  //改为输入状态避免漏电
+  batVcc = vcc_cache / 20;
 }
