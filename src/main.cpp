@@ -57,6 +57,18 @@ float batVcc;
 //电池检测引脚
 #define bat_vcc_pin A0
 
+//当前天气
+String weather;
+//当前气温
+String temperature;
+//天气更新时间
+String reporttime;
+//城市地区
+String city;
+String cityCode = "110106";//丰台区
+//110111 房山
+
+
 //函数声明
 void handleCLEAR();
 void clearDis();
@@ -71,6 +83,7 @@ String changeWeek(int weekSum);
 String getWebParam(String name);
 void buttonHandler(Button2 &btn);
 void getBatNow();
+void getCityWeater();
 
 void setup()
 {
@@ -107,6 +120,7 @@ void setup()
   button.setLongClickHandler(buttonHandler);
   button.setDoubleClickHandler(buttonHandler);
   button.setTripleClickHandler(buttonHandler);
+  getCityWeater();
 }
 
 void loop()
@@ -167,6 +181,7 @@ void updateDisplay()
     WiFi.getAutoConnect();
     Serial.println("WiFi.forceSleepWake() " + WiFi.getSleepMode());
     currentHour = hours;
+    getCityWeater();
   }
 
   //每隔X分钟全局刷新屏幕
@@ -236,14 +251,13 @@ void updateDisplay()
   Serial.println("myDate: " + myDate);
   Serial.println("myWeek: " + myWeek);
 
-
-    //凌晨零点到六点 esp8266 周期深度休眠一小时
+  //凌晨零点到六点 esp8266 周期深度休眠一小时
   if (hours >= 0 && hours <= 6)
-    // if (minutes >= 0 && minutes <= 59)
+  // if (minutes >= 0 && minutes <= 59)
   {
     u8g2.sleepOff();
     clearDis();
-    wifiStatus(myTime+"开始，睡眠"+deepSleepMin+"分钟...", false);
+    wifiStatus(myTime + "开始，睡眠" + deepSleepMin + "分钟...", false);
     u8g2.sleepOn();
     // ESP.deepSleep(deepSleepMin * 60 * 1000000, WAKE_NO_RFCAL); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
     ESP.deepSleep(deepSleepMin * 60 * 1000000); //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
@@ -269,10 +283,11 @@ void updateDisplay()
     u8g2.print("周" + changeWeek(weekdays));
 
     u8g2.setFont(u8g2_font_wqy16_t_gb2312b);
-    u8g2.setCursor(142, 117);
+    // u8g2.setCursor(142, 117);
+    u8g2.setCursor(99, 117);
     // u8g2.print(String(todo));
     getBatNow();
-    u8g2.print("时间:"+String(batLife) + " 电压:"+String(batVcc));
+    u8g2.print("|时间:" + String(batLife) + "|电压:" + String(batVcc)+ "|" + weather + "|" + temperature + "℃");
 
   } while (u8g2.nextPage());
   u8g2.sleepOn();
@@ -447,7 +462,7 @@ void buttonHandler(Button2 &btn)
 void getCityWeater()
 {
 
-  String URL = "http://restapi.amap.com/v3/weather/weatherInfo?city=130606&key=";
+  String URL = "http://restapi.amap.com/v3/weather/weatherInfo?city="+cityCode+"&key=";
   //创建 HTTPClient 对象
   HTTPClient httpClient;
 
@@ -465,6 +480,22 @@ void getCityWeater()
     String str = httpClient.getString();
     Serial.println("ret:" + str);
     Serial.println("获取成功");
+
+    const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(9) + 200;
+    DynamicJsonBuffer jsonBuffer(capacity);
+    JsonObject &root = jsonBuffer.parseObject(str);
+
+    JsonObject &lives_0 = root["lives"][0];
+    const char *lives_0_city = lives_0["city"];               // "莲池区"
+    const char *lives_0_weather = lives_0["weather"];         // "霾"
+    const char *lives_0_temperature = lives_0["temperature"]; // "12"
+    const char *lives_0_reporttime = lives_0["reporttime"];   // "2021-11-17 16:33:01"
+
+    city = String(lives_0_city);
+    weather = String(lives_0_weather);
+    temperature = String(lives_0_temperature);
+    reporttime = String(lives_0_reporttime);
+    Serial.println("城市：" + city + " 天气：" + weather + " 气温：" + temperature + " 上报时间：" + reporttime);
   }
   else
   {
@@ -475,8 +506,9 @@ void getCityWeater()
   //关闭ESP8266与服务器连接
   httpClient.end();
 }
-void getBatNow(){
-    pinMode(bat_switch_pin, OUTPUT);
+void getBatNow()
+{
+  pinMode(bat_switch_pin, OUTPUT);
   digitalWrite(bat_switch_pin, 1);
   delay(1);
   float vcc_cache = 0.0;
